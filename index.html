@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rootsql — услуги</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #1a1a1a; --surface: rgba(255, 255, 255, 0.22); --surface-hover: rgba(255, 255, 255, 0.35);
+            --border: rgba(255, 255, 255, 0.15); --text: #f0f0f0; --text-secondary: #b0b0b0;
+            --text-muted: #888; --accent: #aaa; --radius: 16px; --radius-sm: 10px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --transition: 0.30s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --glass-blur: 20px; --card-bg: rgba(0, 0, 0, 0.72);
+        }
+        body.light {
+            --bg: #f5f5f5; --surface: rgba(255, 255, 255, 0.85); --surface-hover: rgba(255, 255, 255, 0.95);
+            --border: rgba(0, 0, 0, 0.12); --text: #1a1a1a; --text-secondary: #444;
+            --text-muted: #777; --accent: #666; --shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            --card-bg: rgba(255, 255, 255, 0.88);
+        }
+        html { font-size:16px; -webkit-font-smoothing:antialiased; width:100%; max-width:100%; overflow-x:hidden; }
+        body.ui-scroll-locked { overscroll-behavior: none; }
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background: var(--bg); color: var(--text); width:100%; max-width:100vw; min-width:0;
+            min-height:100vh; min-height:100dvh; display: flex; flex-direction: column;
+            overflow-x: hidden; padding: 0 20px 40px;
+            transition: background var(--transition), color var(--transition); position: relative;
+        }
+        body.light { background-image: url("media/oblik.PNG"); background-size: cover; background-attachment: fixed; background-position: center; background-repeat: no-repeat; }
+        #bgVideo { position:fixed; inset:0; width:100vw; height:100vh; height:100dvh; object-fit:cover; z-index:-2; pointer-events:none; }
+        #bgImage { position:fixed; inset:0; width:100vw; height:100vh; height:100dvh; object-fit:cover; z-index:-2; pointer-events:none; display:none; }
+        #bgAudio { display: none; }
+        body.wallpaper-static #bgVideo { display:none; }
+        body.wallpaper-static #bgImage { display:block; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 8px; }
+
+        .floating-menu-btn {
+            position: fixed; top: 20px; right: 20px; z-index: 60; background: var(--surface);
+            border: 1px solid var(--border); color: var(--text); width: 48px; height: 48px;
+            border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; cursor: pointer;
+            transition: background var(--transition), transform var(--transition), border-color var(--transition);
+            backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+            box-shadow: var(--shadow); font-weight: 600; padding: 0; font-family: inherit;
+            -webkit-tap-highlight-color: transparent; opacity:.35;
+        }
+        .floating-menu-btn:hover, .floating-menu-btn.interacting { background: var(--surface-hover); transform: scale(1.05); }
+        .floating-menu-btn:active { transform: scale(0.94); }
+
+        .main { flex: 1; max-width: 720px; width: 100%; margin: 28px auto 0; position: relative; z-index: 1; }
+        .page { display: none; animation: fadeUp 0.40s ease forwards; }
+        .page.active { display: block; }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
+        .card {
+            --shift-x: 0px; --shift-y: 0px; translate: var(--shift-x) var(--shift-y);
+            background: var(--card-bg); backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px 28px; margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            transition: border-color var(--transition), box-shadow var(--transition), transform 0.25s ease, background var(--transition);
+            transform: perspective(800px) rotateX(0) rotateY(0) scale(1); will-change: transform;
+            animation: floatCard 6s ease-in-out infinite;
+        }
+        .card:nth-child(1) { animation-delay: 0s; } .card:nth-child(2) { animation-delay: 0.3s; }
+        .card:nth-child(3) { animation-delay: 0.6s; } .card:nth-child(4) { animation-delay: 0.9s; }
+        .card:nth-child(5) { animation-delay: 1.2s; } .card:nth-child(6) { animation-delay: 1.5s; }
+        .card:nth-child(7) { animation-delay: 1.8s; } .card:nth-child(8) { animation-delay: 2.1s; }
+        .card:nth-child(9) { animation-delay: 2.4s; } .card:nth-child(10) { animation-delay: 2.7s; }
+        @keyframes floatCard {
+            0%, 100% { transform: perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0); }
+            50% { transform: perspective(800px) rotateX(2deg) rotateY(3deg) translateY(-6px); }
+        }
+        .card:hover { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7); transform: perspective(800px) rotateX(2deg) rotateY(2deg) scale(1.01); }
+        body.light .card:hover { border-color: rgba(0, 0, 0, 0.2); box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12); }
+        .card__title { font-weight: 600; font-size: 1.1rem; margin-bottom: 10px; letter-spacing: -0.01em; color: var(--text); transition: color var(--transition); }
+        .card__title i { color: var(--accent); margin-right: 8px; width: 1.2em; text-align: center; }
+        .card__text { color: var(--text-secondary); line-height: 1.65; font-size: 0.95rem; transition: color var(--transition); }
+        .card__text strong { color: var(--text); font-weight: 600; }
+        .card__text a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color var(--transition); font-weight: 500; }
+        .card__text a:hover { border-bottom-color: var(--accent); }
+        .card__text .copy-trigger { cursor: pointer; border-bottom: 1px dashed var(--accent); transition: opacity var(--transition); color: var(--accent); }
+        .card__text .copy-trigger:hover { opacity: 0.7; }
+        .contact-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+        .contact-grid .row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        .contact-grid .label { color: var(--text-muted); font-size: 0.85rem; min-width: 80px; }
+        .contact-grid .value { color: var(--text); font-weight: 500; font-size: 0.95rem; word-break: break-all; }
+        .contact-grid .value .copy-trigger { border-bottom: 1px dashed var(--accent); cursor: pointer; color: var(--accent); }
+        .contact-grid .value .copy-trigger:hover { opacity: 0.7; }
+        .instruction-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+        .instruction-list li { color: var(--text-secondary); line-height: 1.6; font-size: 0.95rem; padding-left: 6px; border-left: 2px solid var(--accent); padding-left: 14px; }
+        .instruction-list li strong { color: var(--text); font-weight: 600; }
+        .steps { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+        .step { display: flex; gap: 14px; align-items: flex-start; }
+        .step .num { width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; color: var(--accent); flex-shrink: 0; }
+        .step .desc { color: var(--text-secondary); line-height: 1.5; font-size: 0.95rem; }
+        .step .desc strong { color: var(--text); }
+        .price-sheet { display: flex; flex-direction: column; gap: 2px; }
+        .price-sheet .price-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 12px; flex-wrap: wrap; }
+        .price-sheet .price-row:last-child { border-bottom: none; }
+        .price-sheet .service { font-weight: 500; font-size: 0.95rem; color: var(--text); }
+        .price-sheet .service i { color: var(--accent); margin-right: 8px; width: 1.2em; text-align: center; font-size: 0.85rem; }
+        .price-sheet .cost { font-weight: 600; font-size: 0.95rem; color: var(--text); background: rgba(255, 255, 255, 0.08); padding: 4px 14px; border-radius: 20px; border: 1px solid var(--border); white-space: nowrap; }
+        .price-sheet .cost.dm { color: var(--accent); border-color: var(--accent); background: rgba(255, 255, 255, 0.10); }
+        body.light .price-sheet .cost { background: rgba(0, 0, 0, 0.06); }
+        body.light .price-sheet .cost.dm { background: rgba(0, 0, 0, 0.08); }
+        .payment-methods { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .payment-methods .label { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; display: block; }
+        .payment-methods .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .payment-methods .tag { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border); border-radius: 20px; padding: 4px 14px; font-size: 0.8rem; color: var(--text-secondary); }
+        body.light .payment-methods .tag { background: rgba(0, 0, 0, 0.05); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 4px; font-weight: 500; }
+        .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 0.95rem; font-family: inherit; transition: border-color var(--transition); }
+        .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+        .form-group select option { background: #1a1a1a; color: var(--text); }
+        body.light .form-group select option { background: #f5f5f5; color: #1a1a1a; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .btn-submit { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 12px 28px; border-radius: var(--radius-sm); font-weight: 600; font-size: 1rem; cursor: pointer; transition: background var(--transition), transform var(--transition); width: 100%; }
+        .btn-submit:hover { background: var(--surface-hover); transform: scale(1.02); }
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 100; opacity: 0; visibility: hidden; transition: opacity var(--transition), visibility var(--transition); }
+        .sidebar-overlay.open { opacity: 1; visibility: visible; }
+        .sidebar { position: fixed; top: 0; right: 0; width: 300px; max-width: 82vw; height: 100%; background: rgba(20, 20, 20, 0.55); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border-left: 1px solid var(--border); z-index: 110; padding: 32px 24px 40px; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease; display: flex; flex-direction: column; overflow-y: auto; box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5); }
+        .sidebar.open { transform: translateX(0); }
+        body.light .sidebar { background: rgba(235, 235, 235, 0.65); }
+        .sidebar.interacting { background: rgba(20, 20, 20, 0.92); }
+        body.light .sidebar.interacting { background: rgba(235, 235, 235, 0.96); }
+        .sidebar__close { align-self: flex-end; background: var(--surface); border: 1px solid var(--border); color: var(--text); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: background var(--transition), transform var(--transition); margin-bottom: 12px; -webkit-tap-highlight-color: transparent; }
+        .sidebar__close:hover { background: var(--surface-hover); transform: scale(1.02); }
+        .sidebar__header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid var(--border); margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+        .sidebar__header .logo { font-weight: 700; font-size: 1.3rem; letter-spacing: -0.02em; color: var(--text); }
+        .sidebar__header .controls { display: flex; gap: 8px; }
+        .sidebar__header .theme-toggle, .sidebar__header .lang-toggle { background: var(--surface); border: 1px solid var(--border); color: var(--text); height: 38px; border-radius: 50%; width: 38px; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: background var(--transition), transform var(--transition), border-color var(--transition); flex-shrink: 0; font-weight: 600; padding: 0; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+        .sidebar__header .theme-toggle:hover, .sidebar__header .lang-toggle:hover { background: var(--surface-hover); transform: scale(1.05); }
+        .sidebar__header .lang-toggle { border-radius: 20px; padding: 0 14px; font-size: 0.8rem; gap: 6px; width: auto; }
+        .sidebar__nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .sidebar__nav .nav-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius-sm); color: var(--text-secondary); font-weight: 500; font-size: 0.95rem; cursor: pointer; transition: background var(--transition), color var(--transition); border: none; background: transparent; width: 100%; text-align: left; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+        .sidebar__nav .nav-item i { width: 1.4em; font-size: 1.1rem; color: var(--text-muted); transition: color var(--transition); }
+        .sidebar__nav .nav-item:hover { background: rgba(255, 255, 255, 0.10); color: var(--text); }
+        .sidebar__nav .nav-item:hover i { color: var(--accent); }
+        .sidebar__nav .nav-item.active { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+        .sidebar__nav .nav-item.active i { color: var(--accent); }
+        body.light .sidebar__nav .nav-item:hover { background: rgba(0, 0, 0, 0.06); }
+        body.light .sidebar__nav .nav-item.active { background: rgba(0, 0, 0, 0.08); }
+        .sidebar__footer { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--text-secondary); text-align: center; }
+        .sidebar__footer a { color: var(--text); text-decoration: none; font-weight: 500; }
+        .sidebar__footer a:hover { text-decoration: underline; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: rgba(20, 20, 20, 0.90); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 12px 28px; border-radius: 12px; color: var(--text); font-size: 0.9rem; font-weight: 500; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7); border: 1px solid var(--border); opacity: 0; visibility: hidden; transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s; z-index: 200; pointer-events: none; white-space: nowrap; }
+        .toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+        .card-flip-wrap { perspective: 1200px; min-height: 200px; cursor: pointer; margin-bottom: 20px; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .card-flip-inner { position: relative; width: 100%; min-height: 200px; transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1); transform-style: preserve-3d; }
+        .card-flip-inner.flipped { transform: rotateY(180deg); }
+        .card-flip-front, .card-flip-back { position: absolute; inset: 0; width: 100%; min-height: 200px; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 24px; text-align: center; background: var(--card-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--border); box-shadow: var(--shadow); transition: border-color var(--transition), box-shadow var(--transition), background var(--transition); user-select: none; -webkit-tap-highlight-color: transparent; }
+        .card-flip-front:hover, .card-flip-back:hover { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7); }
+        body.light .card-flip-front:hover, body.light .card-flip-back:hover { border-color: rgba(0, 0, 0, 0.2); box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12); }
+        .card-flip-back { transform: rotateY(180deg); }
+        .flip-front-brand { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.03em; color: var(--text); margin-bottom: 6px; line-height: 1.1; }
+        .flip-front-brand span { color: var(--accent); }
+        .flip-front-sub { color: var(--text-secondary); font-size: 0.9rem; font-weight: 400; margin-bottom: 14px; }
+        .flip-front-icon { font-size: 2.8rem; color: var(--accent); opacity: 0.5; margin-bottom: 4px; }
+        .flip-back-icon { font-size: 2.6rem; color: #26A5E4; margin-bottom: 8px; }
+        .flip-back-title { font-size: 1.25rem; font-weight: 600; color: var(--text); margin-bottom: 4px; letter-spacing: -0.01em; }
+        .flip-back-text { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; max-width: 420px; margin: 4px auto 16px; }
+        .flip-back-text strong { color: var(--text); font-weight: 600; }
+        .flip-back-btn { display: inline-flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.10); border: 1px solid var(--border); color: var(--text); padding: 10px 26px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; text-decoration: none; transition: background var(--transition), transform var(--transition), border-color var(--transition); font-family: inherit; cursor: pointer; user-select: auto; -webkit-tap-highlight-color: transparent; }
+        .flip-back-btn:hover { background: rgba(255, 255, 255, 0.20); border-color: var(--accent); transform: scale(1.03); }
+        .flip-back-btn i { font-size: 1.1rem; color: #26A5E4; }
+        .calc-display-wrap { background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 18px; margin-bottom: 12px; text-align: right; min-height: 70px; display: flex; flex-direction: column; justify-content: flex-end; }
+        .calc-expression { color: var(--text-muted); font-size: 0.9rem; min-height: 1.4em; word-break: break-all; }
+        .calc-result { font-size: 2rem; font-weight: 600; color: var(--text); word-break: break-all; line-height: 1.2; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .calc-grid button { background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 0; font-size: 1.1rem; font-weight: 500; color: var(--text); cursor: pointer; transition: background var(--transition), transform var(--transition), border-color var(--transition); font-family: inherit; -webkit-tap-highlight-color: transparent; }
+        .calc-grid button:hover { background: var(--surface-hover); border-color: rgba(255, 255, 255, 0.3); transform: scale(1.02); }
+        .calc-grid button:active { transform: scale(0.94); }
+        .calc-grid .operator { color: var(--accent); }
+        .calc-grid .equals { background: var(--accent); color: #1a1a1a; border-color: var(--accent); }
+        .calc-grid .equals:hover { background: var(--text); border-color: var(--text); }
+        .calc-grid .clear { background: rgba(255, 70, 70, 0.15); color: #ff6b6b; }
+        .calc-grid .clear:hover { background: rgba(255, 70, 70, 0.25); }
+        .calc-grid .zero { grid-column: span 2; }
+        .calc-grid .percent { color: var(--text-muted); }
+        .accordion { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; background: var(--card-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); box-shadow: var(--shadow); transition: border-color var(--transition), box-shadow var(--transition), background var(--transition); }
+        .accordion:hover { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7); }
+        body.light .accordion:hover { border-color: rgba(0, 0, 0, 0.2); box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12); }
+        .accordion-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; cursor: pointer; user-select: none; transition: background var(--transition); gap: 12px; -webkit-tap-highlight-color: transparent; }
+        .accordion-header:hover { background: rgba(255, 255, 255, 0.05); }
+        body.light .accordion-header:hover { background: rgba(0, 0, 0, 0.02); }
+        .accordion-header .title { font-weight: 600; font-size: 1.1rem; color: var(--text); display: flex; align-items: center; gap: 10px; }
+        .accordion-header .title i { color: var(--accent); width: 1.2em; text-align: center; }
+        .accordion-header .arrow { font-size: 1.1rem; color: var(--text-muted); transition: transform var(--transition); }
+        .accordion.open .accordion-header .arrow { transform: rotate(180deg); }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), padding 0.3s ease; padding: 0 24px; background: rgba(255, 255, 255, 0.03); border-top: 1px solid transparent; }
+        body.light .accordion-content { background: rgba(0, 0, 0, 0.01); }
+        .accordion.open .accordion-content { max-height: 3000px; padding: 20px 24px 24px; border-top-color: var(--border); }
+        .accordion-content .card__text { color: var(--text-secondary); line-height: 1.65; font-size: 0.95rem; }
+        .accordion-content .card__text p { margin-bottom: 10px; }
+        .accordion-content .card__text strong { color: var(--text); }
+        .osint-tree { margin: 10px 0 16px; padding-left: 6px; }
+        .osint-tree ul { list-style: none; padding-left: 20px; }
+        .osint-tree li { padding: 4px 0; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; border-left: 1px solid var(--border); padding-left: 12px; margin-left: 4px; }
+        .osint-tree li i { color: var(--accent); width: 1.2em; margin-right: 6px; font-size: 0.85rem; }
+        .osint-tree .root { border-left: none; padding-left: 0; font-weight: 500; color: var(--text); }
+        .osint-tree .root i { color: #26A5E4; }
+        .osint-prices { display: flex; flex-wrap: wrap; gap: 14px; margin: 14px 0 8px; }
+        .osint-prices .price-tag { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border); border-radius: 30px; padding: 6px 18px; font-size: 0.9rem; color: var(--text); display: inline-flex; align-items: center; gap: 6px; }
+        .osint-prices .price-tag strong { font-weight: 600; }
+        .osint-prices .price-tag .period { color: var(--text-muted); font-weight: 400; }
+        body.light .osint-prices .price-tag { background: rgba(0, 0, 0, 0.05); }
+        .private-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; list-style: none; padding: 0; margin: 8px 0 12px; }
+        .private-list li { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; padding-left: 4px; }
+        .private-list li i { color: var(--accent); width: 1.2em; margin-right: 6px; font-size: 0.8rem; }
+        @media (max-width: 540px) { .private-list { grid-template-columns: 1fr; } }
+        .private-prices { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0 8px; }
+        .private-prices .price-tag { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border); border-radius: 30px; padding: 6px 18px; font-size: 0.9rem; color: var(--text); display: inline-flex; align-items: center; gap: 6px; }
+        .private-prices .price-tag strong { font-weight: 600; }
+        body.light .private-prices .price-tag { background: rgba(0, 0, 0, 0.05); }
+        .bot-list { list-style: none; padding: 0; margin: 8px 0 12px; }
+        .bot-list li { padding: 6px 0; border-bottom: 1px solid var(--border); color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; }
+        .bot-list li:last-child { border-bottom: none; }
+        .bot-list li strong { color: var(--text); }
+        .bot-list .price-tag { display: inline-block; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border); border-radius: 20px; padding: 2px 14px; font-weight: 600; color: var(--text); font-size: 0.85rem; margin-left: 6px; }
+        body.light .bot-list .price-tag { background: rgba(0, 0, 0, 0.05); }
+        .bot-sub { padding-left: 20px; margin: 4px 0 8px; color: var(--text-muted); font-size: 0.9rem; }
+        .bot-sub strong { color: var(--text); }
+        .search-analysis { display: flex; flex-direction: column; gap: 12px; }
+        .search-analysis .item { border-left: 2px solid var(--accent); padding-left: 16px; }
+        .search-analysis .item h4 { font-weight: 600; color: var(--text); font-size: 1rem; margin-bottom: 2px; }
+        .search-analysis .item p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; }
+        .search-analysis .btn-privat { display: inline-block; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 12px 28px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: background var(--transition), transform var(--transition), border-color var(--transition); text-align: center; margin-top: 6px; -webkit-tap-highlight-color: transparent; }
+        .search-analysis .btn-privat:hover { background: var(--surface-hover); border-color: var(--accent); transform: scale(1.02); }
+        .search-analysis .btn-privat i { margin-right: 8px; color: var(--accent); }
+        .store-image { width: 100%; border-radius: var(--radius-sm); margin-bottom: 18px; border: 1px solid var(--border); display: block; }
+        .video-card video { width: 100%; border-radius: var(--radius-sm); margin: 12px 0 16px; border: 1px solid var(--border); }
+        .discount-price { font-size: 1.2rem; font-weight: 700; color: #ff6b6b; }
+        .discount-price .old { text-decoration: line-through; color: var(--text-muted); font-weight: 400; margin-right: 10px; }
+        .bot-features { list-style: none; padding: 0; margin: 10px 0 14px; }
+        .bot-features li { padding: 4px 0; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; }
+        .bot-features li::before { content: "✓ "; color: var(--accent); font-weight: 700; }
+        .post-section { --shift-x: 0px; --shift-y: 0px; translate: var(--shift-x) var(--shift-y); background: var(--card-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 28px; margin-bottom: 20px; box-shadow: var(--shadow); transition: border-color var(--transition), box-shadow var(--transition), background var(--transition); }
+        .post-section:hover { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7); }
+        body.light .post-section:hover { border-color: rgba(0, 0, 0, 0.2); box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12); }
+        .post-section img, .post-section video { width: 100%; border-radius: var(--radius-sm); margin-bottom: 18px; border: 1px solid var(--border); display: block; }
+        .post-section h2 { font-weight: 600; font-size: 1.3rem; margin-bottom: 12px; color: var(--text); letter-spacing: -0.01em; }
+        .post-section h3 { font-weight: 600; font-size: 1.05rem; margin: 16px 0 6px; color: var(--text); }
+        .post-section p { color: var(--text-secondary); line-height: 1.7; font-size: 0.95rem; margin-bottom: 12px; white-space: pre-wrap; }
+        .post-section p:last-child { margin-bottom: 0; }
+        .post-section .divider { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }
+        .post-section .note { font-style: italic; color: var(--text-muted); margin-top: 8px; }
+        .faq-item { margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+        .faq-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .faq-item .question { font-weight: 600; color: var(--text); font-size: 1rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .faq-item .question i { color: var(--accent); font-size: 0.9rem; }
+        .faq-item .answer { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; padding-left: 28px; }
+        .legal-footer { background: var(--card-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-top: 20px; box-shadow: var(--shadow); color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; }
+        .legal-footer p { margin-bottom: 8px; }
+        .legal-footer p:last-child { margin-bottom: 0; }
+        .legal-footer strong { color: var(--text); }
+        .scroll-top-btn { position: fixed; bottom: 30px; right: 30px; z-index: 70; background: var(--surface); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--border); color: var(--text); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer; box-shadow: var(--shadow); transition: opacity 0.3s ease, transform 0.3s ease, background var(--transition); opacity: 0; transform: translateY(20px); pointer-events: none; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+        .scroll-top-btn.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .scroll-top-btn:hover { background: var(--surface-hover); }
+        .settings-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s ease; }
+        .settings-overlay.open { opacity: 1; visibility: visible; }
+        .settings-modal { background: var(--card-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--border); border-radius: var(--radius); max-width: 480px; width: 100%; padding: 28px 24px; box-shadow: var(--shadow); max-height: 90vh; overflow-y: auto; position: relative; }
+        .settings-modal h2 { font-weight: 600; font-size: 1.3rem; color: var(--text); margin-bottom: 18px; letter-spacing: -0.01em; }
+        .settings-modal .close-settings { position: absolute; top: 14px; right: 18px; background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; transition: color var(--transition); -webkit-tap-highlight-color: transparent; }
+        .settings-modal .close-settings:hover { color: var(--text); }
+        .settings-group { margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+        .settings-group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .settings-group label { display: flex; align-items: center; gap: 12px; color: var(--text-secondary); font-size: 0.95rem; cursor: pointer; padding: 4px 0; }
+        .settings-group label input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+        .settings-group select { background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px; color: var(--text); font-size: 0.9rem; font-family: inherit; width: 100%; margin-top: 4px; outline: none; cursor: pointer; }
+        .settings-group select:focus { border-color: var(--accent); }
+        .settings-group .hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; padding-left: 30px; }
+        body.no-card-animation .card { animation: none !important; }
+        body.no-card-animation .card-flip-wrap { animation: none !important; }
+        body.optimized .card, body.optimized .post-section, body.optimized .accordion, body.optimized .legal-footer, body.optimized .settings-modal { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: var(--card-bg) !important; }
+        body.optimized .sidebar { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+        body.font-serif { font-family: 'Georgia', serif; }
+        body.font-monospace { font-family: 'Courier New', monospace; }
+        body.font-inter { font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+        @media (max-width: 540px) {
+            .post-section { padding: 18px 18px; }
+            .post-section h2 { font-size: 1.1rem; }
+            .post-section h3 { font-size: 0.95rem; }
+            .settings-modal { padding: 20px 16px; }
+            .scroll-top-btn { width: 44px; height: 44px; font-size: 1.2rem; bottom: 20px; right: 20px; }
+            body { padding: 0 14px 30px; }
+            .card { padding: 18px 18px; }
+            .floating-menu-btn { top: 12px; right: 12px; width: 44px; height: 44px; font-size: 1.2rem; }
+            .price-sheet .price-row { padding: 10px 0; }
+            .price-sheet .service { font-size: 0.88rem; }
+            .price-sheet .cost { font-size: 0.85rem; padding: 3px 12px; }
+            .contact-grid .label { min-width: 60px; font-size: 0.8rem; }
+            .sidebar { padding: 24px 18px 30px; width: 280px; }
+            .instruction-list li { font-size: 0.88rem; }
+            .step .desc { font-size: 0.88rem; }
+            .card-flip-wrap, .card-flip-inner { min-height: 180px; }
+            .card-flip-front, .card-flip-back { min-height: 180px; padding: 20px 16px; }
+            .flip-front-brand { font-size: 1.8rem; }
+            .flip-front-icon { font-size: 2rem; }
+            .flip-back-title { font-size: 1.05rem; }
+            .flip-back-text { font-size: 0.85rem; }
+            .flip-back-btn { padding: 8px 20px; font-size: 0.8rem; }
+            .calc-grid { gap: 6px; }
+            .calc-grid button { padding: 12px 0; font-size: 1rem; }
+            .calc-display-wrap { min-height: 60px; padding: 10px 14px; }
+            .calc-result { font-size: 1.6rem; }
+            .osint-prices, .private-prices { flex-direction: column; align-items: flex-start; }
+            .accordion-header { padding: 14px 16px; }
+            .accordion-content { padding: 0 16px; }
+            .accordion.open .accordion-content { padding: 16px 16px 20px; }
+            .bot-list li { font-size: 0.88rem; padding: 5px 0; }
+            .search-analysis .item { padding-left: 12px; }
+            .sidebar__header .logo { font-size: 1.1rem; }
+            .faq-item .question { font-size: 0.95rem; }
+            .faq-item .answer { font-size: 0.9rem; padding-left: 20px; }
+        }
+        @media (max-width: 380px) {
+            .contact-grid .row { flex-direction: column; gap: 2px; }
+            .contact-grid .label { min-width: auto; }
+            .card-flip-wrap, .card-flip-inner { min-height: 160px; }
+            .card-flip-front, .card-flip-back { min-height: 160px; padding: 16px 12px; }
+            .flip-front-brand { font-size: 1.5rem; }
+            .flip-back-title { font-size: 0.95rem; }
+        }
+        .rules-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s ease; }
+        .rules-overlay.open { opacity: 1; visibility: visible; }
+        .rules-modal { background: var(--card-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--border); border-radius: var(--radius); max-width: 580px; width: 100%; padding: 32px 28px; box-shadow: var(--shadow); max-height: 90vh; overflow-y: auto; }
+        .rules-modal h2 { font-weight: 600; font-size: 1.4rem; color: var(--text); margin-bottom: 16px; letter-spacing: -0.01em; }
+        .rules-modal p { color: var(--text-secondary); line-height: 1.7; font-size: 0.95rem; margin-bottom: 14px; }
+        .rules-modal .agree-btn { background: #2e7d32; border: none; color: #fff; font-weight: 600; font-size: 1rem; padding: 14px 32px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.2s ease, transform 0.2s ease; width: 100%; margin-top: 8px; font-family: inherit; letter-spacing: 0.3px; -webkit-tap-highlight-color: transparent; }
+        .rules-modal .agree-btn:hover { background: #388e3c; transform: scale(1.02); }
+        .rules-modal .agree-btn:active { transform: scale(0.97); }
+        .animate-on-scroll { opacity: 0; transform: translateX(-40px); transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .animate-on-scroll.visible { opacity: 1; transform: translateX(0); }
+        .animate-on-scroll:nth-child(even) { transform: translateX(40px); }
+        .animate-on-scroll.visible:nth-child(even) { transform: translateX(0); }
+
+        .admin-tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+        .admin-tab { flex:1; min-width:90px; padding:12px 8px; border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:var(--radius-sm); cursor:pointer; font-weight:600; font-family:inherit; font-size:.85rem; transition:all .25s; }
+        .admin-tab:hover { background:var(--surface-hover); }
+        .admin-tab.active { background:var(--accent); color:var(--bg); border-color:var(--accent); }
+        .admin-form-group { margin-bottom:14px; }
+        .admin-form-group label { display:block; color:var(--text-secondary); font-size:.85rem; margin-bottom:6px; font-weight:500; }
+        .admin-form-group input[type=text], .admin-form-group input[type=password], .admin-form-group textarea {
+            width:100%; padding:10px 14px; background:rgba(255,255,255,.06); border:1px solid var(--border);
+            border-radius:var(--radius-sm); color:var(--text); font-family:inherit; font-size:.95rem; transition:border-color .25s;
+        }
+        body.light .admin-form-group input[type=text], body.light .admin-form-group input[type=password], body.light .admin-form-group textarea { background:rgba(0,0,0,.04); }
+        .admin-form-group input:focus, .admin-form-group textarea:focus { outline:none; border-color:var(--accent); }
+        .admin-form-group textarea { min-height:90px; resize:vertical; }
+        .file-input-wrap { display:flex; align-items:center; gap:10px; padding:12px 14px; background:rgba(255,255,255,.06); border:1px dashed var(--border); border-radius:var(--radius-sm); cursor:pointer; transition:border-color .25s, background .25s; }
+        body.light .file-input-wrap { background:rgba(0,0,0,.04); }
+        .file-input-wrap:hover { border-color:var(--accent); background:rgba(255,255,255,.1); }
+        .file-input-wrap input[type=file] { display:none; }
+        .file-input-wrap i { color:var(--accent); font-size:1.1rem; }
+        .file-input-wrap .file-name { color:var(--text-muted); font-size:.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .btn-admin { padding:11px 22px; background:var(--accent); color:var(--bg); border:none; border-radius:var(--radius-sm); cursor:pointer; font-weight:600; font-family:inherit; font-size:.9rem; transition:transform .2s, opacity .2s; }
+        .btn-admin:hover { transform:scale(1.02); }
+        .btn-admin:active { transform:scale(.97); }
+        .btn-admin.danger { background:#ff6b6b; color:#fff; }
+        .btn-admin.secondary { background:var(--surface); color:var(--text); border:1px solid var(--border); }
+        .btn-admin.secondary:hover { background:var(--surface-hover); }
+        .admin-item { display:flex; gap:14px; padding:14px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:10px; align-items:center; }
+        body.light .admin-item { background:rgba(0,0,0,.03); }
+        .admin-item .thumb { width:64px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0; background:#000; border:1px solid var(--border); }
+        .admin-item .info { flex:1; min-width:0; }
+        .admin-item .info .name { font-weight:600; color:var(--text); margin-bottom:3px; font-size:.95rem; }
+        .admin-item .info .desc { color:var(--text-muted); font-size:.82rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .admin-item .actions { display:flex; gap:6px; flex-shrink:0; }
+        .admin-item .actions button { padding:6px 12px; font-size:.78rem; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; font-family:inherit; font-weight:500; transition:background .2s; }
+        .admin-item .actions button:hover { background:var(--surface-hover); }
+        .admin-item .actions button.danger { color:#ff6b6b; border-color:rgba(255,107,107,.3); }
+        .admin-item .actions button.danger:hover { background:rgba(255,107,107,.15); }
+        .preview-box { margin-top:10px; padding:10px; background:rgba(255,255,255,.04); border-radius:var(--radius-sm); text-align:center; }
+        body.light .preview-box { background:rgba(0,0,0,.03); }
+        .preview-box img, .preview-box video, .preview-box audio { max-width:100%; max-height:220px; border-radius:6px; display:block; margin:0 auto; }
+        .admin-empty { text-align:center; padding:30px 20px; color:var(--text-muted); font-size:.9rem; }
+        .admin-logout { display:flex; justify-content:flex-end; margin-bottom:12px; }
+
+        .custom-post { position:relative; }
+        .custom-post .post-media { width:100%; border-radius:var(--radius-sm); margin-bottom:18px; border:1px solid var(--border); display:block; }
+        .custom-service-card {
+            background: var(--card-bg); backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            padding: 16px; margin-bottom: 12px;
+            display: flex; gap: 14px; align-items: center;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .custom-service-card:hover { border-color: rgba(255,255,255,0.3); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        body.light .custom-service-card:hover { border-color: rgba(0,0,0,0.2); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .custom-service-card .svc-img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; flex-shrink: 0; border: 1px solid var(--border); background: #000; }
+        .custom-service-card .svc-info { flex: 1; min-width: 0; }
+        .custom-service-card .svc-info .svc-name { font-weight: 600; font-size: 1rem; color: var(--text); margin-bottom: 4px; }
+        .custom-service-card .svc-info .svc-desc { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 6px; }
+        .custom-service-card .svc-info .svc-price { font-weight: 600; color: var(--accent); font-size: 0.95rem; background: rgba(255,255,255,0.08); padding: 3px 14px; border-radius: 20px; border: 1px solid var(--border); display: inline-block; }
+        body.light .custom-service-card .svc-info .svc-price { background: rgba(0,0,0,0.06); }
+
+        .wp-section { margin-bottom: 20px; }
+        .wp-section:last-child { margin-bottom: 0; }
+        .wp-section-title { font-weight: 600; color: var(--text); font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .wp-section-title i { color: var(--accent); }
+        .wp-divider { border: 0; border-top: 1px solid var(--border); margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <video id="bgVideo" autoplay muted loop playsinline preload="auto"><source src="media/myby.mp4" type="video/mp4"></video>
+    <img id="bgImage" src="imoby/obo.png" alt="" aria-hidden="true">
+    <audio id="bgAudio" loop preload="none"></audio>
+
+    <button class="floating-menu-btn" id="menuToggle" aria-label="Открыть меню">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <button class="scroll-top-btn" id="scrollTopBtn" aria-label="Наверх">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <main class="main">
+        <div class="page active" id="page-home">
+            <div class="card animate-on-scroll" style="border-color: rgba(255,255,255,0.2); padding: 32px 28px;">
+                <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                    <div style="font-size: 3rem; color: var(--accent); margin-bottom: 8px;">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h1 style="font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; color: var(--text);" data-i18n="hero_title">rootsql</h1>
+                    <p style="color: var(--text-secondary); font-size: 1.05rem; max-width: 460px; margin: 0 auto 14px;" data-i18n="hero_sub">Услуги по сбору данных, OSINT, автоматизация и не только</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                        <a href="#store" onclick="navigateTo('store'); return false;" style="background: var(--surface); border: 1px solid var(--border); padding: 10px 28px; border-radius: 40px; color: var(--text); font-weight: 600; text-decoration: none; transition: background var(--transition);" data-i18n="hero_btn_store"><i class="fas fa-store"></i> Перейти в магазин</a>
+                        <a href="#order" onclick="navigateTo('order'); return false;" style="background: var(--surface); border: 1px solid var(--border); padding: 10px 28px; border-radius: 40px; color: var(--text); font-weight: 600; text-decoration: none; transition: background var(--transition);" data-i18n="hero_btn_order"><i class="fas fa-paper-plane"></i> Заказать</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-flip-wrap animate-on-scroll" id="flipCardWrap">
+                <div class="card-flip-inner" id="flipCardInner">
+                    <div class="card-flip-front">
+                        <div class="flip-front-icon"><i class="fas fa-hand-peace"></i></div>
+                        <div class="flip-front-brand">rootsql</div>
+                        <div class="flip-front-sub" data-i18n="flip_front_sub">Добро пожаловать</div>
+                    </div>
+                    <div class="card-flip-back">
+                        <div class="flip-back-icon"><i class="fab fa-telegram"></i></div>
+                        <div class="flip-back-title" data-i18n="flip_back_title">Бесплатные инструменты</div>
+                        <div class="flip-back-text" data-i18n="flip_back_text">Заходи в наш <strong>Telegram</strong>, где множество <strong>бесплатных инструментов</strong> для любых задач.</div>
+                        <a href="https://t.me/date_bad" target="_blank" class="flip-back-btn" data-i18n="flip_back_btn"><i class="fab fa-telegram"></i> Перейти в канал</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card animate-on-scroll">
+                <div class="card__title" data-i18n="why_title"><i class="fas fa-star"></i> Почему мы</div>
+                <div class="card__text" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; margin-top: 4px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-shield-alt" style="color: var(--accent); font-size: 1.2rem; width: 1.8rem;"></i>
+                        <span style="font-weight: 500;" data-i18n="why_anon">Анонимность</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-bolt" style="color: var(--accent); font-size: 1.2rem; width: 1.8rem;"></i>
+                        <span style="font-weight: 500;" data-i18n="why_speed">Быстрое выполнение</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-lock" style="color: var(--accent); font-size: 1.2rem; width: 1.8rem;"></i>
+                        <span style="font-weight: 500;" data-i18n="why_priv">Приватность данных</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-headset" style="color: var(--accent); font-size: 1.2rem; width: 1.8rem;"></i>
+                        <span style="font-weight: 500;" data-i18n="why_support">Поддержка 24/7</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card animate-on-scroll">
+                <div class="card__title" data-i18n="services_title"><i class="fas fa-th-list"></i> Основные услуги</div>
+                <div class="card__text" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px;">
+                    <div data-i18n="serv_virt">Вирт. номера</div>
+                    <div data-i18n="serv_bots">Боты / софты</div>
+                    <div data-i18n="serv_data">Сбор данных</div>
+                    <div data-i18n="serv_osint">OSINT-архив</div>
+                    <div data-i18n="serv_private">Приват БД</div>
+                    <div data-i18n="serv_snos">Боты для сноса</div>
+                </div>
+                <div style="margin-top: 14px; text-align: right;">
+                    <a href="#store" onclick="navigateTo('store'); return false;" style="color: var(--accent); text-decoration: none; font-weight: 500; border-bottom: 1px solid var(--accent);" data-i18n="services_full">Полный прайс →</a>
+                </div>
+            </div>
+            <div class="card animate-on-scroll">
+                <div class="card__title" data-i18n="instruction_title"><i class="fas fa-circle-info"></i> Инструкция</div>
+                <div class="card__text">
+                    <ul class="instruction-list">
+                        <li data-i18n="inst_1"><strong>Прайс на сайте</strong> — нажми на три точки в углу, затем выбери <strong>«магазин»</strong>.</li>
+                        <li data-i18n="inst_2"><strong>Быстрый переход в личку</strong> — скопируй мой юзернейм <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> или нажми на него, после чего сможешь написать в Telegram.</li>
+                        <li data-i18n="inst_3"><strong>Чтобы избежать недопонимания</strong> — пиши конкретно, что тебя интересует. Иначе ответа не будет.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card animate-on-scroll">
+                <div class="card__title" data-i18n="work_title"><i class="fas fa-route"></i> Как мы работаем</div>
+                <div class="steps">
+                    <div class="step"><span class="num">1</span><span class="desc" data-i18n="work_1">Принимаем вашу заявку в личном чате в Telegram</span></div>
+                    <div class="step"><span class="num">2</span><span class="desc" data-i18n="work_2">Вы оплачиваете</span></div>
+                    <div class="step"><span class="num">3</span><span class="desc" data-i18n="work_3">Наша работа начинается после оплаты</span></div>
+                    <div class="step"><span class="num">4</span><span class="desc" data-i18n="work_4">Выдаём ваш заказ в личных сообщениях в Telegram <strong>(в том же чате, где была оплата)</strong></span></div>
+                    <div class="step" style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 6px;">
+                        <span class="num" style="background:transparent; border-color:transparent;">!</span>
+                        <span class="desc" style="color: var(--text-muted); font-size:0.9rem;" data-i18n="work_5">Если отвечают не сразу — значит заняты, попробуйте продублировать сообщение.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card animate-on-scroll">
+                <div class="card__title" data-i18n="search_title"><i class="fas fa-search"></i> Поиск / Анализ — в чем разница?</div>
+                <div class="card__text search-analysis">
+                    <div class="item">
+                        <h4><i class="fas fa-chart-line" style="color: var(--accent); margin-right: 6px;"></i> <span data-i18n="analysis_label">Анализ</span></h4>
+                        <p data-i18n="analysis_text">Анализ в расследовании — это систематический процесс обработки и интерпретации информации. В расследованиях анализ — метод проверки объективности информации.</p>
+                    </div>
+                    <div class="item">
+                        <h4><i class="fas fa-compass" style="color: var(--accent); margin-right: 6px;"></i> <span data-i18n="search_label">Поиск</span></h4>
+                        <p data-i18n="search_text">Поиск — это целенаправленный процесс действий, направленный на обнаружение чего-либо утерянного, нового или нужного. В расследованиях поиск — это обнаружение новых зацепок из исходных данных.</p>
+                    </div>
+                    <a href="#store" onclick="navigateTo('store'); return false;" class="btn-privat" data-i18n="search_btn"><i class="fas fa-lock"></i> КУПИТЬ ПРИВАТ ГДЕ БОЛЬШЕ ПРО ОСИНТ</a>
+                </div>
+            </div>
+            <div class="card animate-on-scroll">
+                <div class="card__title" data-i18n="contacts_title"><i class="fas fa-address-book"></i> Контакты</div>
+                <div class="card__text">
+                    <div class="contact-grid">
+                        <div class="row"><span class="label" data-i18n="contacts_channel">Канал</span><span class="value"><span class="copy-trigger" data-copy="@date_bad">@date_bad</span></span></div>
+                        <div class="row"><span class="label" data-i18n="contacts_pm">Личка</span><span class="value"><span class="copy-trigger" data-copy="@rootsql">@rootsql</span></span></div>
+                        <div class="row"><span class="label" data-i18n="contacts_price">Прайс</span><span class="value"><span class="copy-trigger" data-copy="@pass_as">@pass_as</span></span></div>
+                        <div class="row" style="margin-top:4px;"><span class="label" data-i18n="contacts_bot">Бот</span><span class="value"><span class="copy-trigger" data-copy="@SosinafrootBot">@SosinafrootBot</span> <span style="color:var(--text-muted);font-size:0.8rem;font-weight:400;margin-left:6px;" data-i18n="contacts_bot_hint">(если спам-блок)</span></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dynamicPostsContainer"></div>
+
+            <div class="post-section animate-on-scroll">
+                <img src="media/my.jpg" alt="OSINT инструменты" />
+                <h2>Инвентарь и дисциплина в OSINT</h2>
+                <p>OSINT-исследователь похож на хирурга — успех операции зависит не только от знаний, но и от того, насколько быстро и уверенно вы достаёте нужный инструмент. В мире открытых источников десятки, а то и сотни инструментов — от поисковиков и чекеров утечек до инструментов для анализа доменов и обратного поиска изображений. Без продуманной системы хранения и быстрого доступа вы рискуете тратить половину времени на поиски нужной ссылки или скрипта.</p>
+                <p>Главная проблема новичка — инструменты разбросаны по браузерным закладкам, заметкам, чатам и Excel-таблицам. В результате — потеря контекста, замедление работы и упущенные возможности.</p>
+                <h3>Почему дисциплина в инструментах — это навык №1</h3>
+                <p>Многие начинающие OSINT-специалисты ошибочно полагают, что главное — выучить как можно больше инструментов. На практике важнее другое:</p>
+                <ul>
+                    <li><span class="highlight">Скорость реакции.</span> В расследовании каждая минута на счету. Если вам нужно 30 секунд, чтобы найти нужный инструмент, а не 5 — за день вы теряете часы.</li>
+                    <li><span class="highlight">Снижение когнитивной нагрузки.</span> Когда все инструменты разложены по полочкам, мозг не тратит энергию на поиск — вы сосредоточены на самом анализе.</li>
+                    <li><span class="highlight">Воспроизводимость.</span> Чёткая система позволяет вернуться к расследованию через неделю и сразу понять, что вы делали и какие инструменты использовали.</li>
+                </ul>
+                <h3>Где лучше всего создавать инвентарь OSINT-инструментов?</h3>
+                <p><span class="accent-text">Start.me</span> — это визуальная стартовая страница, которую OSINT-сообщество использует массово. Тысячи исследователей по всему миру доверяют этой платформе.</p>
+                <p><span class="accent-text">Notion</span> — для тех, кто любит структуру. Notion — это универсальное рабочее пространство для заметок, баз данных и совместной работы.</p>
+                <p><span class="accent-text">Obsidian</span> — для офлайн-энтузиастов, сам использую Obsidian — это приватная база знаний на Markdown с мощными связями между заметками.</p>
+                <hr class="divider" />
+                <p class="note">ПРОДОЛЖЕНИЯ И ВСЕ ДРУГИЕ ИНСТРУМЕНТЫ В АРХИВЕ</p>
+            </div>
+
+            <div class="post-section animate-on-scroll">
+                <h2>Я не уважаю доксеров и, в принципе, КМ. Почему?</h2>
+                <p>Причин много, но расскажу некоторые из них:</p>
+                <h3>Что касается доксеров:</h3>
+                <ul>
+                    <li>они лезут в личную жизнь людей</li>
+                    <li>сливают или продают данные</li>
+                    <li>угрожают, причём часто безосновательно и по-детски</li>
+                </ul>
+                <h3>Почему я не уважаю "КМ"?</h3>
+                <p>Причин тоже куча, но перечислю основные</p>
+                <ul>
+                    <li><span class="highlight">Главная причина — попытка самоутвердиться.</span> Как правило, разборки доксеров в интернете выглядят так: какой-нибудь участник "КМ" пытается доказать свою крутость.</li>
+                    <li><span class="highlight">Безграмотность и неадекватность в общении.</span> Часто замечаю, что при любом словесном конфликте такие "специалисты" сливают чьи-то данные и зовут оппонента в "КФ".</li>
+                    <li><span class="highlight">Смешные эдиты с "валидацией".</span> Это когда один доксер находит данные другого и требует извинений.</li>
+                </ul>
+                <h3>Мой итог:</h3>
+                <p>КМ и доксеры — это сборище детей, которые пытаются доказать свою крутость, показать, насколько они крутые, не имея при этом ничего особенного и не сделав ничего значительного.</p>
+                <p class="note">В НАШЕМ АРХИВЕ БОЛЬШЕ ПРО OSINT</p>
+            </div>
+
+            <div class="post-section animate-on-scroll">
+                <h2>Почему OSINT, а не доксинг?</h2>
+                <p>Многие приходят в OSINT ради "найти любого человека по номеру телефона" Но настоящая ценность OSINT не в этом</p>
+                <p>Доксинг это публикация личной информации с целью навредить. Это незаконно, аморально и, что важнее, бесполезно для развития.</p>
+                <p>OSINT это разведка по открытым источникам с соблюдением закона. Это про анализ, а не про сбор.</p>
+                <p>Переходя на OSINT, ты выбираешь профессию, а не хобби для "пробива".</p>
+                <p class="note">А ЛУЧШИЙ МАНУАЛЫ И ОБУЧЕНИЯ В НАШЕЙ ЗАКРЫТОЙ ГРУППЕ</p>
+            </div>
+
+            <div class="legal-footer animate-on-scroll">
+                <p><strong>Данный сайт не более чем переходник.</strong> Сайт не предоставляет инструменты или же не продаёт запрещённое. Всё в рамках закона РФ и других стран.</p>
+                <p>Администратор не несёт ответственности за действия пользователей после продажи того или иного инструмента. Администратор не продаёт ничего незаконного. Все сделки осуществляются на добровольной основе. Пользователь самостоятельно несёт ответственность за использование приобретённых инструментов.</p>
+                <p>Администратор не виновен и не отвечает за действия других пользователей после продажи. Любые инструменты предоставляются «как есть», без гарантий.</p>
+            </div>
+        </div>
+
+        <div class="page" id="page-store">
+            <div class="card" style="border-color:var(--accent);">
+                <img src="media/my.jpg" alt="rootsql" class="store-image" onerror="this.style.display='none'" />
+                <div class="card__title" style="font-size:1.3rem;" data-i18n="price_title"><i class="fas fa-tag"></i> PRICE SHEET</div>
+                <div class="price-sheet">
+                    <div class="price-row"><span class="service"><i class="fas fa-phone"></i> <span data-i18n="price_virt">Виртуальные номера</span></span><span class="cost dm">лс</span></div>
+                    <div class="price-row"><span class="service"><i class="fas fa-code"></i> <span data-i18n="price_soft">Бот / сайты / софты</span></span><span class="cost dm">лс</span></div>
+                    <div class="price-row"><span class="service"><i class="fas fa-bullhorn"></i> <span data-i18n="price_ad">Реклама</span></span><span class="cost dm">лс</span></div>
+                    <div class="price-row"><span class="service"><i class="fas fa-database"></i> <span data-i18n="price_data">Сбор данных</span></span><span class="cost">от 300 руб / 4$</span></div>
+                    <div class="price-row"><span class="service"><i class="fas fa-shield"></i> <span data-i18n="price_garant">Гарант</span></span><span class="cost">5% от суммы</span></div>
+                    <div class="price-row"><span class="service"><i class="fas fa-folder-open"></i> <span data-i18n="price_osint">Закрытый OSINT-архив</span></span><span class="cost">от 200 руб</span></div>
+                    <div class="price-row"><span class="service"><i class="fas fa-folder"></i> <span data-i18n="price_private">Архив 2 (приват)</span></span><span class="cost">от 450 руб</span></div>
+                    <div class="price-row"><span class="service"><i class="fas fa-robot"></i> <span data-i18n="price_bots">Боты / софты для сноса</span></span><span class="cost">от 500 руб</span></div>
+                    <div class="price-row"><span class="service"><i class="fas fa-lock"></i> <span data-i18n="price_db">Приват база данных</span></span><span class="cost">300 руб / 4$</span></div>
+                </div>
+                <div id="customServicesContainer"></div>
+                <div class="payment-methods">
+                    <span class="label" data-i18n="payment_label">Принимаю</span>
+                    <div class="tags">
+                        <span class="tag" data-i18n="pay_card">Карта РФ</span>
+                        <span class="tag" data-i18n="pay_sbp">СБП по номеру телефона</span>
+                        <span class="tag" data-i18n="pay_crypto">Крипта бот</span>
+                        <span class="tag" data-i18n="pay_wallet">Любой крипто-кошелёк</span>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion" id="accordionOsint">
+                <div class="accordion-header" data-target="accordionOsint">
+                    <span class="title"><i class="fas fa-archive"></i> <span data-i18n="accord_osint_title">Закрытый OSINT‑архив</span></span>
+                    <span class="arrow"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="accordion-content">
+                    <div class="card__text">
+                        <p data-i18n="accord_osint_text1">Всё, что нужно для разведки по открытым источникам, — уже собрано и разложено по полочкам. Никакого хаоса. Только структура, только польза.</p>
+                        <div class="osint-tree">
+                            <ul>
+                                <li class="root"><i class="fas fa-folder-open"></i> ОСНОВНОЕ
+                                    <ul><li><i class="fas fa-file-alt"></i> Правила</li><li><i class="fas fa-compass"></i> Навигация</li><li><i class="fas fa-comments"></i> Чат</li></ul>
+                                </li>
+                                <li class="root"><i class="fas fa-shield-alt"></i> БЕЗОПАСНОСТЬ И ЗАКОН
+                                    <ul><li><i class="fas fa-balance-scale"></i> ЭТИКА И ЗАКОНЫ</li><li><i class="fas fa-user-secret"></i> OPSEC и Анонимность</li><li><i class="fas fa-camera"></i> EVIDENCE</li></ul>
+                                </li>
+                                <li class="root"><i class="fas fa-tools"></i> ИНСТРУМЕНТЫ
+                                    <ul><li><i class="fas fa-globe"></i> WEB OSINT</li><li><i class="fas fa-search"></i> Dork</li><li><i class="fas fa-user-tag"></i> USERNAME TOOL OSINT</li><li><i class="fas fa-robot"></i> BOT TOOL OSINT</li><li><i class="fas fa-terminal"></i> TERMINAL OSINT TOOL</li><li><i class="fab fa-github"></i> GITHUB TOOL OSINT</li><li><i class="fas fa-cogs"></i> OSINT AUTOMATION</li><li><i class="fas fa-exchange-alt"></i> TRANSFORMERS MALTEGO</li></ul>
+                                </li>
+                                <li class="root"><i class="fas fa-database"></i> ДАННЫЕ И ИСТОЧНИКИ
+                                    <ul><li><i class="fas fa-bug"></i> BREACHES и утечки</li><li><i class="fas fa-coins"></i> FINANCE OSINT</li><li><i class="fas fa-map-marked-alt"></i> GEOINT</li><li><i class="fas fa-user-friends"></i> HUMINT</li><li><i class="fas fa-image"></i> MEDIA OSINT</li><li><i class="fas fa-moon"></i> DARKWEB & TOR</li><li><i class="fas fa-brain"></i> AI & DEEPFAKE</li></ul>
+                                </li>
+                                <li class="root"><i class="fas fa-graduation-cap"></i> ОБУЧЕНИЕ И ПРАКТИКА
+                                    <ul><li><i class="fas fa-chalkboard-teacher"></i> ЛЕКЦИЯ</li><li><i class="fas fa-calendar-alt"></i> EVENTS</li><li><i class="fas fa-folder"></i> KEIS</li><li><i class="fas fa-eye"></i> КРИТИКА OSINT 2026</li></ul>
+                                </li>
+                                <li class="root"><i class="fas fa-plus-circle"></i> ДОПОЛНИТЕЛЬНО
+                                    <ul><li><i class="fas fa-sync-alt"></i> Updates</li><li><i class="fas fa-book"></i> Книги по OSINT</li><li><i class="fas fa-bullhorn"></i> РЕКЛАМА</li></ul>
+                                </li>
+                            </ul>
+                        </div>
+                        <p data-i18n="accord_osint_for">ДЛЯ КОГО: — Новичков, кто хочет быстро войти в тему<br>— Профи, уставших собирать ссылки по закладкам</p>
+                        <div class="osint-prices">
+                            <span class="price-tag"><span class="period" data-i18n="osint_week_label">🗓 На неделю</span> <strong>200 ₽</strong></span>
+                            <span class="price-tag"><span class="period" data-i18n="osint_month_label">📅 На месяц</span> <strong>450 ₽</strong></span>
+                            <span class="price-tag"><span class="period" data-i18n="osint_forever_label">♾ Навсегда</span> <strong>600 ₽</strong></span>
+                        </div>
+                        <p style="margin-top:6px;" data-i18n="accord_osint_get"><strong>КАК ПОЛУЧИТЬ:</strong> Купить можно в лс: <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> <span style="display:block; margin-top:2px;">Принимаю: РУБ / USDT</span> <span style="display:block; margin-top:6px; font-style:italic; color:var(--text-muted);" data-i18n="accord_osint_footer">Стань частью закрытого OSINT-сообщества.</span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion" id="accordionPrivate">
+                <div class="accordion-header" data-target="accordionPrivate">
+                    <span class="title"><i class="fas fa-lock"></i> <span data-i18n="accord_private_title">Продам вход в приват</span></span>
+                    <span class="arrow"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="accordion-content">
+                    <div class="card__text">
+                        <p><span data-i18n="accord_private_topics">• тем: в данный момент 76+</span></p>
+                        <p><span data-i18n="accord_private_has">В привате имеется :</span></p>
+                        <ul class="private-list">
+                            <li><i class="fas fa-eye"></i> znozor</li><li><i class="fas fa-cube"></i> софты</li><li><i class="fas fa-tools"></i> утилиты</li><li><i class="fas fa-code"></i> скрипты</li><li><i class="fas fa-biohazard"></i> Вирусы</li><li><i class="fas fa-skull"></i> ратники</li><li><i class="fas fa-search"></i> osint</li><li><i class="fas fa-graduation-cap"></i> Обучение osint</li><li><i class="fas fa-screwdriver"></i> инструменты osint</li><li><i class="fas fa-database"></i> База данных</li><li><i class="fas fa-paint-brush"></i> ава/дизайн</li><li><i class="fas fa-laptop-code"></i> программы</li><li><i class="fab fa-telegram"></i> тг моды</li><li><i class="fas fa-mask"></i> алайт молшен</li><li><i class="fas fa-file-alt"></i> документы</li><li><i class="fab fa-python"></i> python курс</li><li><i class="fas fa-terminal"></i> python программы</li><li><i class="fas fa-robot"></i> бот нет</li><li><i class="fas fa-globe"></i> Сайты</li><li><i class="fas fa-comment-dots"></i> Боты</li><li><i class="fas fa-mobile-alt"></i> тг клиенты</li><li><i class="fas fa-credit-card"></i> банк карты</li><li><i class="fas fa-shield-alt"></i> впны</li><li><i class="fas fa-book"></i> туторы</li><li><i class="fas fa-exclamation-triangle"></i> ошибки термукс</li><li><i class="fas fa-key"></i> сессий</li><li><i class="fas fa-envelope"></i> почты</li><li><i class="fas fa-file-pdf"></i> мануалы</li><li><i class="fas fa-bomb"></i> бомберы</li><li><i class="fas fa-network-wired"></i> dos атаки</li><li><i class="fas fa-virus"></i> Вирусы / вирусалогия</li><li><i class="fas fa-project-diagram"></i> проекси</li><li><i class="fas fa-gamepad"></i> Игры</li><li><i class="fab fa-python"></i> модуль python</li><li><i class="fas fa-gamepad"></i> Читы для игр</li>
+                        </ul>
+                        <p style="margin-top:8px;" data-i18n="accord_private_more">Больше информации можно получить в лс</p>
+                        <div class="private-prices">
+                            <span class="price-tag"><strong>450 ₽</strong> <span style="color:var(--text-muted);" data-i18n="private_price_one">— один человек</span></span>
+                            <span class="price-tag"><strong>700 ₽</strong> <span style="color:var(--text-muted);" data-i18n="private_price_two">— для двоих</span></span>
+                        </div>
+                        <p style="margin-top:8px;" data-i18n="accord_private_pay">Принимаю оплату: в $ / ₽<br><strong>Писать:</strong><br> • <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> — продавец<br> • <span class="copy-trigger" data-copy="@SosinafrootBot">@SosinafrootBot</span> — спам блок</p>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion" id="accordionBots">
+                <div class="accordion-header" data-target="accordionBots">
+                    <span class="title"><i class="fas fa-robot"></i> <span data-i18n="accord_bots_title">Боты — сносоры</span></span>
+                    <span class="arrow"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="accordion-content">
+                    <div class="card__text">
+                        <p><span data-i18n="bots_no_session">— боты без сессий:</span> <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:0.85rem;">1к руб</span></p>
+                        <p><span data-i18n="bots_with_session">— боты с сессиями:</span> <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:0.85rem;">2-3к руб</span></p>
+                        <p><span data-i18n="soft_no_session">— софты без сессий:</span> <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:0.85rem;">1к руб</span></p>
+                        <p><span data-i18n="soft_with_session">— софты с сессиями:</span> <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:0.85rem;">2-3к руб</span></p>
+                        <div class="bot-sub"><span data-i18n="bots_session_desc"><strong>• сессия</strong> — это аккаунты в телеграме, которые автоматически будут отправлять жалобу на другой аккаунт. По умолчанию я добавляю 50 сессий, если нужно больше — доплачивать: <strong>1 сессия = 30 руб</strong></span></div>
+                        <p style="margin-top:12px;"><span data-i18n="bots_botnet">— бот нет:</span> <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:0.85rem;">3к руб</span></p>
+                        <p><span data-i18n="bots_botnet_soft">— софты в виде бот нет:</span> <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:0.85rem;">3к руб</span></p>
+                        <div class="bot-sub"><span data-i18n="bots_botnet_desc"><strong>• бот нет</strong> — это чужие заражённые аккаунты в телеграме. Суть та же, что и с сессиями, но тут чутка по-другому.</span></div>
+                        <p style="margin-top:12px;"><span data-i18n="bots_scam">— боты для скама:</span> <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:0.85rem;">700 руб</span></p>
+                        <p><span data-i18n="bots_troll">— софты для троллинга:</span> <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:0.85rem;">500 руб</span></p>
+                        <p><span data-i18n="bots_business">— боты для бизнеса:</span> <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:0.85rem;">от 1к руб</span></p>
+                        <div class="bot-sub"><span data-i18n="bots_scam_desc"><strong>• боты для скама</strong> — визуальный бот, который ты сможешь продавать другим людям со своими правилами и ценами.<br><strong>• софты для троллинга</strong> — тоже визуальный, но более устрашающе придуман для шуток.<br><strong>• боты для бизнеса</strong> — боты под твой вкус и выбор.</span></div>
+                        <p style="margin-top:14px;"><span data-i18n="bots_other">— другое</span></p>
+                        <ul class="bot-list" style="list-style:none; padding-left:0;">
+                            <li data-i18n="bots_other1"><strong>• дополнить функционал под свой вкус</strong></li>
+                            <li data-i18n="bots_other2"><strong>• поменять дизайн</strong></li>
+                            <li data-i18n="bots_other3"><strong>• заменить старый или добавить новый</strong></li>
+                            <li data-i18n="bots_other4"><strong>• изменить софт или удалить не нужные функции</strong></li>
+                        </ul>
+                        <p style="margin-top:8px; color:var(--text-muted);" data-i18n="bots_note">Все описания выше выделены жирным для наглядности.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="border-color:var(--accent);">
+                <div class="card__title" style="font-size:1.2rem;"><i class="fas fa-calculator"></i> Калькулятор</div>
+                <div class="card__text">
+                    <div class="calc-display-wrap">
+                        <div class="calc-expression" id="calcExpression"></div>
+                        <div class="calc-result" id="calcResult">0</div>
+                    </div>
+                    <div class="calc-grid" id="calcGrid">
+                        <button class="clear" data-action="clear">C</button>
+                        <button class="operator" data-action="operator" data-value="%">%</button>
+                        <button class="operator" data-action="operator" data-value="/">÷</button>
+                        <button class="operator" data-action="operator" data-value="*">×</button>
+                        <button data-action="digit" data-value="7">7</button>
+                        <button data-action="digit" data-value="8">8</button>
+                        <button data-action="digit" data-value="9">9</button>
+                        <button class="operator" data-action="operator" data-value="-">−</button>
+                        <button data-action="digit" data-value="4">4</button>
+                        <button data-action="digit" data-value="5">5</button>
+                        <button data-action="digit" data-value="6">6</button>
+                        <button class="operator" data-action="operator" data-value="+">+</button>
+                        <button data-action="digit" data-value="1">1</button>
+                        <button data-action="digit" data-value="2">2</button>
+                        <button data-action="digit" data-value="3">3</button>
+                        <button class="equals" data-action="equals">=</button>
+                        <button class="zero" data-action="digit" data-value="0">0</button>
+                        <button data-action="digit" data-value=".">.</button>
+                        <button class="operator" data-action="backspace"><i class="fas fa-delete-left"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-order">
+            <div class="card" style="border-color:var(--accent);">
+                <div class="card__title" style="font-size:1.2rem;" data-i18n="order_title"><i class="fas fa-paper-plane"></i> Быстрый заказ</div>
+                <div class="card__text">
+                    <p style="margin-bottom:16px;" data-i18n="order_sub">Выберите услугу и напишите комментарий — мы свяжемся с вами в Telegram.</p>
+                    <form id="orderForm">
+                        <div class="form-group">
+                            <label for="serviceSelect" data-i18n="order_service_label">Услуга</label>
+                            <select id="serviceSelect" required>
+                                <option value="" data-i18n="order_select">выберите</option>
+                                <option value="Виртуальные номера" data-i18n="order_virt">Виртуальные номера</option>
+                                <option value="Бот / сайты / софты" data-i18n="order_soft">Бот / сайты / софты</option>
+                                <option value="Реклама" data-i18n="order_ad">Реклама</option>
+                                <option value="Сбор данных" data-i18n="order_data">Сбор данных</option>
+                                <option value="Гарант" data-i18n="order_garant">Гарант</option>
+                                <option value="OSINT архив" data-i18n="order_osint">OSINT архив</option>
+                                <option value="Архив 2 (приват)" data-i18n="order_private">Архив 2 (приват)</option>
+                                <option value="Боты / софты для сноса" data-i18n="order_bots">Боты / софты для сноса</option>
+                                <option value="Приват база данных" data-i18n="order_db">Приват база данных</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="comment" data-i18n="order_comment_label">Комментарий (дополнительные пожелания)</label>
+                            <textarea id="comment" placeholder="Опишите, что именно нужно..." data-i18n-placeholder="order_comment_placeholder"></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit"><i class="fab fa-telegram" style="margin-right:8px;"></i> <span data-i18n="order_submit">Отправить заявку</span></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-faq">
+            <div class="card" style="border-color:var(--accent);">
+                <div class="card__title" style="font-size:1.3rem;"><i class="fas fa-question-circle"></i> Частые вопросы</div>
+                <div class="card__text">
+                    <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Делаю ли я бесплатно?</div><div class="answer">Нет</div></div>
+                    <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Принимаю ли я звёзды?</div><div class="answer">Нет</div></div>
+                    <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Обмен может сделаем?</div><div class="answer">Нет, принимаю только ₽ / $</div></div>
+                    <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> На сколько быстро будет работа выполнена?</div><div class="answer">Зависит от очереди, но в среднем по 30 минут</div></div>
+                    <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Можно в архив / приват бесплатно?</div><div class="answer">Возможно попасть, можно узнать в лс</div></div>
+                    <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Отвечаю ли я на вопросы для видео?</div><div class="answer">Нет</div></div>
+                    <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Ты боишься докса?</div><div class="answer">Нет</div></div>
+                    <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Сколько стоит то или иное?</div><div class="answer">Зайди в раздел магазин, если видишь значок лс пиши, объясню и расскажу</div></div>
+                    <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Сколько мне лет?</div><div class="answer">Мне 9.5</div></div>
+                    <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Я пацан?</div><div class="answer">Нет, я старая бабушка</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-admin">
+            <div class="card" id="adminLoginBox" style="border-color:var(--accent);">
+                <div class="card__title" style="font-size:1.2rem;"><i class="fas fa-user-shield"></i> Вход в админ-панель</div>
+                <div class="card__text">
+                    <div class="admin-form-group">
+                        <label for="adminPasswordInput">Пароль</label>
+                        <input type="password" id="adminPasswordInput" placeholder="Введите пароль..." autocomplete="off" />
+                    </div>
+                    <button class="btn-admin" id="adminLoginBtn" style="width:100%;">Войти</button>
+                    <p id="adminLoginError" style="color:#ff6b6b; margin-top:10px; font-size:.9rem; display:none;"></p>
+                </div>
+            </div>
+
+            <div id="adminContentBox" style="display:none;">
+                <div class="admin-logout">
+                    <button class="btn-admin secondary" id="adminLogoutBtn"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+                </div>
+
+                <div class="admin-tabs">
+                    <button class="admin-tab active" data-tab="posts"><i class="fas fa-newspaper"></i> Посты</button>
+                    <button class="admin-tab" data-tab="services"><i class="fas fa-store"></i> Магазин</button>
+                    <button class="admin-tab" data-tab="wallpapers"><i class="fas fa-image"></i> Обои</button>
+                </div>
+
+                <div class="admin-tab-content" id="adminTabPosts">
+                    <div class="card" style="border-color:var(--accent);">
+                        <div class="card__title"><i class="fas fa-plus-circle"></i> <span id="postFormTitle">Новый пост</span></div>
+                        <div class="card__text">
+                            <div class="admin-form-group">
+                                <label>Картинка / видео</label>
+                                <label class="file-input-wrap" for="postMediaInput">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span class="file-name" id="postMediaName">Выберите файл (jpg, png, mp4, webm)</span>
+                                    <input type="file" id="postMediaInput" accept="image/*,video/*" />
+                                </label>
+                            </div>
+                            <div class="preview-box" id="postMediaPreview" style="display:none;"></div>
+                            <div class="admin-form-group">
+                                <label for="postTitleInput">Заголовок</label>
+                                <input type="text" id="postTitleInput" placeholder="Например: Инвентарь в OSINT" maxlength="120" />
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="postDescInput">Описание</label>
+                                <textarea id="postDescInput" placeholder="Текст поста... Можно использовать переводы строк"></textarea>
+                            </div>
+                            <button class="btn-admin" id="postSaveBtn" style="width:100%;"><i class="fas fa-save"></i> <span id="postSaveBtnText">Добавить пост</span></button>
+                            <button class="btn-admin secondary" id="postCancelEditBtn" style="width:100%; margin-top:8px; display:none;">Отмена</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card__title"><i class="fas fa-list"></i> Существующие посты</div>
+                        <div id="postsAdminList"></div>
+                    </div>
+                </div>
+
+                <div class="admin-tab-content" id="adminTabServices" style="display:none;">
+                    <div class="card" style="border-color:var(--accent);">
+                        <div class="card__title"><i class="fas fa-plus-circle"></i> <span id="serviceFormTitle">Новая услуга</span></div>
+                        <div class="card__text">
+                            <div class="admin-form-group">
+                                <label>Картинка услуги</label>
+                                <label class="file-input-wrap" for="serviceMediaInput">
+                                    <i class="fas fa-image"></i>
+                                    <span class="file-name" id="serviceMediaName">Выберите картинку (jpg, png)</span>
+                                    <input type="file" id="serviceMediaInput" accept="image/*" />
+                                </label>
+                            </div>
+                            <div class="preview-box" id="serviceMediaPreview" style="display:none;"></div>
+                            <div class="admin-form-group">
+                                <label for="serviceNameInput">Название услуги</label>
+                                <input type="text" id="serviceNameInput" placeholder="Например: Взлом Instagram" maxlength="120" />
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="serviceDescInput">Описание</label>
+                                <textarea id="serviceDescInput" placeholder="Что входит в услугу..."></textarea>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="servicePriceInput">Цена</label>
+                                <input type="text" id="servicePriceInput" placeholder="Например: 500 руб / лс" maxlength="60" />
+                            </div>
+                            <button class="btn-admin" id="serviceSaveBtn" style="width:100%;"><i class="fas fa-save"></i> <span id="serviceSaveBtnText">Добавить услугу</span></button>
+                            <button class="btn-admin secondary" id="serviceCancelEditBtn" style="width:100%; margin-top:8px; display:none;">Отмена</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card__title"><i class="fas fa-list"></i> Существующие услуги</div>
+                        <div id="servicesAdminList"></div>
+                    </div>
+                </div>
+
+                <div class="admin-tab-content" id="adminTabWallpapers" style="display:none;">
+                    <div class="card" style="border-color:var(--accent);">
+                        <div class="card__title"><i class="fas fa-moon"></i> Тёмная тема</div>
+                        <div class="card__text">
+                            <div class="admin-form-group">
+                                <label>Живые обои (видео)</label>
+                                <label class="file-input-wrap" for="wpDarkLiveInput">
+                                    <i class="fas fa-video"></i>
+                                    <span class="file-name" id="wpDarkLiveName">Не задано</span>
+                                    <input type="file" id="wpDarkLiveInput" accept="video/*" />
+                                </label>
+                            </div>
+                            <button class="btn-admin secondary" id="wpDarkLiveRemove" style="width:100%; margin-bottom:16px;"><i class="fas fa-trash"></i> Удалить живые обои</button>
+
+                            <div class="admin-form-group">
+                                <label>Обычные обои (картинка)</label>
+                                <label class="file-input-wrap" for="wpDarkStaticInput">
+                                    <i class="fas fa-image"></i>
+                                    <span class="file-name" id="wpDarkStaticName">Не задано</span>
+                                    <input type="file" id="wpDarkStaticInput" accept="image/*" />
+                                </label>
+                            </div>
+                            <button class="btn-admin secondary" id="wpDarkStaticRemove" style="width:100%; margin-bottom:16px;"><i class="fas fa-trash"></i> Удалить обычные обои</button>
+
+                            <div class="admin-form-group">
+                                <label>Звук на фоне</label>
+                                <label class="file-input-wrap" for="wpDarkSoundInput">
+                                    <i class="fas fa-music"></i>
+                                    <span class="file-name" id="wpDarkSoundName">Не задано</span>
+                                    <input type="file" id="wpDarkSoundInput" accept="audio/*" />
+                                </label>
+                            </div>
+                            <button class="btn-admin secondary" id="wpDarkSoundRemove" style="width:100%;"><i class="fas fa-trash"></i> Удалить звук</button>
+                        </div>
+                    </div>
+
+                    <div class="card" style="border-color:var(--accent);">
+                        <div class="card__title"><i class="fas fa-sun"></i> Светлая тема</div>
+                        <div class="card__text">
+                            <div class="admin-form-group">
+                                <label>Живые обои (видео)</label>
+                                <label class="file-input-wrap" for="wpLightLiveInput">
+                                    <i class="fas fa-video"></i>
+                                    <span class="file-name" id="wpLightLiveName">Не задано</span>
+                                    <input type="file" id="wpLightLiveInput" accept="video/*" />
+                                </label>
+                            </div>
+                            <button class="btn-admin secondary" id="wpLightLiveRemove" style="width:100%; margin-bottom:16px;"><i class="fas fa-trash"></i> Удалить живые обои</button>
+
+                            <div class="admin-form-group">
+                                <label>Обычные обои (картинка)</label>
+                                <label class="file-input-wrap" for="wpLightStaticInput">
+                                    <i class="fas fa-image"></i>
+                                    <span class="file-name" id="wpLightStaticName">Не задано</span>
+                                    <input type="file" id="wpLightStaticInput" accept="image/*" />
+                                </label>
+                            </div>
+                            <button class="btn-admin secondary" id="wpLightStaticRemove" style="width:100%; margin-bottom:16px;"><i class="fas fa-trash"></i> Удалить обычные обои</button>
+
+                            <div class="admin-form-group">
+                                <label>Звук на фоне</label>
+                                <label class="file-input-wrap" for="wpLightSoundInput">
+                                    <i class="fas fa-music"></i>
+                                    <span class="file-name" id="wpLightSoundName">Не задано</span>
+                                    <input type="file" id="wpLightSoundInput" accept="audio/*" />
+                                </label>
+                            </div>
+                            <button class="btn-admin secondary" id="wpLightSoundRemove" style="width:100%;"><i class="fas fa-trash"></i> Удалить звук</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card__text" style="font-size:.85rem; color:var(--text-muted);">
+                            <p style="margin-bottom:8px;"><strong style="color:var(--text);">Примечание:</strong></p>
+                            <p style="margin-bottom:6px;">Лимит размера файла — 4 МБ (localStorage не потянет больше). Для живых обоев рекомендуется короткое сжатое видео.</p>
+                            <p>Если файл не задан — используется стандартный из папки media/imoby.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <button class="sidebar__close" id="sidebarClose" aria-label="Закрыть меню"><i class="fas fa-xmark"></i></button>
+        <div class="sidebar__header">
+            <span class="logo">rootsql</span>
+            <div class="controls">
+                <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="lang-toggle" id="langToggle">RUS</button>
+            </div>
+        </div>
+        <nav class="sidebar__nav">
+            <button class="nav-item active" data-page="home"><i class="fas fa-house"></i> <span data-i18n="nav_home">Главное меню</span></button>
+            <button class="nav-item" data-page="store"><i class="fas fa-store"></i> <span data-i18n="nav_store">Магазин</span></button>
+            <button class="nav-item" data-page="order"><i class="fas fa-paper-plane"></i> <span data-i18n="nav_order">Заказать</span></button>
+            <button class="nav-item" data-page="faq"><i class="fas fa-question-circle"></i> <span>Частые вопросы</span></button>
+            <button class="nav-item" data-page="settings" id="settingsNavBtn"><i class="fas fa-cog"></i> <span>Настройки</span></button>
+            <button class="nav-item" data-action="channel"><i class="fab fa-telegram"></i> <span data-i18n="nav_channel">Наш канал</span></button>
+            <button class="nav-item" data-action="instructions"><i class="fas fa-circle-info"></i> <span data-i18n="nav_instruction">Инструкция</span></button>
+        </nav>
+        <div class="sidebar__footer"><a href="https://t.me/date_bad" target="_blank" data-i18n="footer_channel">наш телеграм канал — @date_bad</a></div>
+    </aside>
+
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-modal">
+            <button class="close-settings" id="settingsClose"><i class="fas fa-times"></i></button>
+            <h2>Настройки</h2>
+            <div class="settings-group">
+                <label><input type="checkbox" id="optGyro" checked> <span>Гироскоп</span></label>
+                <div class="hint">Движение блоков при наклоне устройства</div>
+            </div>
+            <div class="settings-group">
+                <label><input type="checkbox" id="optCardAnim" checked> <span>Анимация карточек</span></label>
+                <div class="hint">Покачивание карточек</div>
+            </div>
+            <div class="settings-group">
+                <label><input type="checkbox" id="optFixBg"> <span>Фиксация фона</span></label>
+                <div class="hint">Остановить видео на фоне</div>
+            </div>
+            <div class="settings-group"><label><input type="checkbox" id="optBgSound"> <span>Звук обоев</span></label><div class="hint">По умолчанию выключен.</div></div>
+            <div class="settings-group"><label>Тип обоев</label><select id="optWallpaperType"><option value="live">Живый обой</option><option value="static">Обычный обой</option></select></div>
+            <div class="settings-group">
+                <label><input type="checkbox" id="optOptimize"> <span>Оптимизация</span></label>
+                <div class="hint">Отключает размытие и тени для производительности</div>
+            </div>
+            <div class="settings-group">
+                <label>Шрифт текста</label>
+                <select id="optFont">
+                    <option value="inter">Inter</option>
+                    <option value="serif">Serif</option>
+                    <option value="monospace">Monospace</option>
+                </select>
+            </div>
+            <div class="settings-group" style="border-bottom: none;">
+                <button class="btn-submit" id="optRereadRules" style="background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: var(--radius-sm); cursor: pointer; width: 100%; font-weight: 600;">Прочитать все условия снова</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="rules-overlay" id="rulesOverlay">
+        <div class="rules-modal">
+            <h2>Правила использования</h2>
+            <p><strong>Данный сайт не более чем переходник.</strong> Сайт не предоставляет инструменты или же не продаёт запрещённое. Всё в рамках закона РФ и других стран.</p>
+            <p>Администратор не несёт ответственности за действия пользователей после продажи того или иного инструмента. Администратор не продаёт ничего незаконного. Все сделки осуществляются на добровольной основе.</p>
+            <p>Администратор не виновен и не отвечает за действия других пользователей после продажи. Любые инструменты предоставляются «как есть», без гарантий.</p>
+            <button class="agree-btn" id="agreeBtn">Я согласен</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        (function() {
+            // ============ WALLPAPER DATA LAYER ============
+            const DEFAULT_WALLPAPERS = {
+                light: { live: 'media/myby2.mp4', static: 'imoby/obo2.png' },
+                dark:  { live: 'media/myby.mp4',  static: 'imoby/obo.png' }
+            };
+            function getCustomWallpapers() {
+                try {
+                    const raw = localStorage.getItem('rootsql-wallpapers');
+                    if (!raw) return { light: {}, dark: {} };
+                    const d = JSON.parse(raw);
+                    return { light: d.light || {}, dark: d.dark || {} };
+                } catch (e) { return { light: {}, dark: {} }; }
+            }
+            function saveCustomWallpapers(d) {
+                try { localStorage.setItem('rootsql-wallpapers', JSON.stringify(d)); return true; }
+                catch (e) { showToast('Ошибка: файл слишком большой'); return false; }
+            }
+            function getWallpaperSrc(theme, type) {
+                const custom = getCustomWallpapers();
+                if (custom[theme] && custom[theme][type]) return custom[theme][type];
+                return DEFAULT_WALLPAPERS[theme][type] || null;
+            }
+
+            // ============ ADMIN DATA LAYER ============
+            const STORAGE_KEY = 'rootsql-admin-data';
+            const ADMIN_PASSWORD = 'rusufsql1';
+            const ADMIN_AUTH_KEY = 'rootsql-admin-auth';
+            const MAX_FILE_SIZE = 2 * 1024 * 1024;
+            const MAX_WP_FILE_SIZE = 4 * 1024 * 1024;
+
+            function loadData() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return { posts: [], services: [] };
+                    const d = JSON.parse(raw);
+                    return { posts: d.posts || [], services: d.services || [] };
+                } catch (e) { return { posts: [], services: [] }; }
+            }
+            function saveData(data) {
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); return true; }
+                catch (e) {
+                    showToast('Ошибка: файл слишком большой или память переполнена');
+                    return false;
+                }
+            }
+            function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+            function escapeHtml(str) {
+                return String(str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            }
+
+            function renderDynamicPosts() {
+                const container = document.getElementById('dynamicPostsContainer');
+                if (!container) return;
+                const data = loadData();
+                container.innerHTML = '';
+                if (!data.posts.length) return;
+                const sorted = [...data.posts].reverse();
+                sorted.forEach(post => {
+                    const el = document.createElement('div');
+                    el.className = 'post-section animate-on-scroll visible custom-post';
+                    let mediaHtml = '';
+                    if (post.media) {
+                        if (post.mediaType === 'video') {
+                            mediaHtml = `<video class="post-media" controls src="${post.media}"></video>`;
+                        } else {
+                            mediaHtml = `<img class="post-media" src="${post.media}" alt="${escapeHtml(post.title)}" />`;
+                        }
+                    }
+                    el.innerHTML = `
+                        ${mediaHtml}
+                        <h2>${escapeHtml(post.title)}</h2>
+                        <p>${escapeHtml(post.description)}</p>
+                    `;
+                    container.appendChild(el);
+                });
+            }
+
+            function renderDynamicServices() {
+                const container = document.getElementById('customServicesContainer');
+                if (!container) return;
+                const data = loadData();
+                container.innerHTML = '';
+                if (!data.services.length) return;
+                data.services.forEach(svc => {
+                    const card = document.createElement('div');
+                    card.className = 'custom-service-card';
+                    card.innerHTML = `
+                        ${svc.media ? `<img class="svc-img" src="${svc.media}" alt="${escapeHtml(svc.name)}" />` : `<div class="svc-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);"><i class="fas fa-image"></i></div>`}
+                        <div class="svc-info">
+                            <div class="svc-name">${escapeHtml(svc.name)}</div>
+                            ${svc.description ? `<div class="svc-desc">${escapeHtml(svc.description)}</div>` : ''}
+                            ${svc.price ? `<div class="svc-price">${escapeHtml(svc.price)}</div>` : ''}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            function isAdminLoggedIn() { return localStorage.getItem(ADMIN_AUTH_KEY) === 'yes'; }
+            function setAdminAuth(v) {
+                if (v) localStorage.setItem(ADMIN_AUTH_KEY, 'yes');
+                else localStorage.removeItem(ADMIN_AUTH_KEY);
+            }
+
+            function updateAdminUI() {
+                const loginBox = document.getElementById('adminLoginBox');
+                const contentBox = document.getElementById('adminContentBox');
+                if (!loginBox || !contentBox) return;
+                if (isAdminLoggedIn()) {
+                    loginBox.style.display = 'none';
+                    contentBox.style.display = 'block';
+                    renderAdminLists();
+                    refreshWallpaperLabels();
+                } else {
+                    loginBox.style.display = 'block';
+                    contentBox.style.display = 'none';
+                }
+            }
+
+            let pendingPostMedia = null, pendingPostMediaType = null;
+            let pendingServiceMedia = null;
+            let editingPostId = null, editingServiceId = null;
+
+            function setupFileInput(inputId, previewId, nameId, onLoaded, maxSize = MAX_FILE_SIZE) {
+                const input = document.getElementById(inputId);
+                const preview = document.getElementById(previewId);
+                const nameEl = document.getElementById(nameId);
+                if (!input) return;
+                input.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (!file) { return; }
+                    if (file.size > maxSize) {
+                        showToast('Файл больше ' + Math.round(maxSize/1024/1024) + 'МБ. Сожми файл.');
+                        this.value = '';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const dataUrl = e.target.result;
+                        if (nameEl) nameEl.textContent = file.name + ' (' + Math.round(file.size/1024) + ' КБ)';
+                        if (preview) {
+                            preview.style.display = 'block';
+                            const isVideo = file.type.startsWith('video/');
+                            const isAudio = file.type.startsWith('audio/');
+                            if (isAudio) preview.innerHTML = `<audio src="${dataUrl}" controls></audio>`;
+                            else if (isVideo) preview.innerHTML = `<video src="${dataUrl}" controls></video>`;
+                            else preview.innerHTML = `<img src="${dataUrl}" alt="preview" />`;
+                        }
+                        onLoaded(dataUrl, file.type.startsWith('video/') ? 'video' : (file.type.startsWith('audio/') ? 'audio' : 'image'));
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            setupFileInput('postMediaInput', 'postMediaPreview', 'postMediaName', (dataUrl, type) => {
+                pendingPostMedia = dataUrl; pendingPostMediaType = type;
+            });
+            setupFileInput('serviceMediaInput', 'serviceMediaPreview', 'serviceMediaName', (dataUrl) => {
+                pendingServiceMedia = dataUrl;
+            });
+
+            function resetPostForm() {
+                editingPostId = null;
+                pendingPostMedia = null; pendingPostMediaType = null;
+                document.getElementById('postMediaInput').value = '';
+                document.getElementById('postMediaPreview').style.display = 'none';
+                document.getElementById('postMediaPreview').innerHTML = '';
+                document.getElementById('postMediaName').textContent = 'Выберите файл (jpg, png, mp4, webm)';
+                document.getElementById('postTitleInput').value = '';
+                document.getElementById('postDescInput').value = '';
+                document.getElementById('postFormTitle').textContent = 'Новый пост';
+                document.getElementById('postSaveBtnText').textContent = 'Добавить пост';
+                document.getElementById('postCancelEditBtn').style.display = 'none';
+            }
+
+            function savePost() {
+                const title = document.getElementById('postTitleInput').value.trim();
+                const description = document.getElementById('postDescInput').value.trim();
+                if (!title) { showToast('Введи заголовок'); return; }
+                if (!description) { showToast('Введи описание'); return; }
+
+                const data = loadData();
+                if (editingPostId) {
+                    const idx = data.posts.findIndex(p => p.id === editingPostId);
+                    if (idx !== -1) {
+                        data.posts[idx].title = title;
+                        data.posts[idx].description = description;
+                        if (pendingPostMedia) {
+                            data.posts[idx].media = pendingPostMedia;
+                            data.posts[idx].mediaType = pendingPostMediaType;
+                        }
+                    }
+                } else {
+                    data.posts.push({
+                        id: uid(),
+                        title, description,
+                        media: pendingPostMedia,
+                        mediaType: pendingPostMediaType,
+                        createdAt: Date.now()
+                    });
+                }
+                if (saveData(data)) {
+                    showToast(editingPostId ? 'Пост обновлён' : 'Пост добавлен');
+                    resetPostForm();
+                    renderAdminLists();
+                    renderDynamicPosts();
+                }
+            }
+
+            function editPost(id) {
+                const data = loadData();
+                const post = data.posts.find(p => p.id === id);
+                if (!post) return;
+                editingPostId = id;
+                pendingPostMedia = null; pendingPostMediaType = null;
+                document.getElementById('postTitleInput').value = post.title;
+                document.getElementById('postDescInput').value = post.description;
+                const preview = document.getElementById('postMediaPreview');
+                if (post.media) {
+                    preview.style.display = 'block';
+                    preview.innerHTML = post.mediaType === 'video'
+                        ? `<video src="${post.media}" controls></video>`
+                        : `<img src="${post.media}" alt="preview" />`;
+                    document.getElementById('postMediaName').textContent = 'Оставь пустым, чтобы сохранить текущее медиа';
+                } else {
+                    preview.style.display = 'none';
+                }
+                document.getElementById('postFormTitle').textContent = 'Редактирование поста';
+                document.getElementById('postSaveBtnText').textContent = 'Сохранить изменения';
+                document.getElementById('postCancelEditBtn').style.display = 'block';
+                document.getElementById('page-admin').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            function deletePost(id) {
+                if (!confirm('Удалить этот пост?')) return;
+                const data = loadData();
+                data.posts = data.posts.filter(p => p.id !== id);
+                if (saveData(data)) {
+                    showToast('Пост удалён');
+                    renderAdminLists();
+                    renderDynamicPosts();
+                }
+            }
+
+            function resetServiceForm() {
+                editingServiceId = null;
+                pendingServiceMedia = null;
+                document.getElementById('serviceMediaInput').value = '';
+                document.getElementById('serviceMediaPreview').style.display = 'none';
+                document.getElementById('serviceMediaPreview').innerHTML = '';
+                document.getElementById('serviceMediaName').textContent = 'Выберите картинку (jpg, png)';
+                document.getElementById('serviceNameInput').value = '';
+                document.getElementById('serviceDescInput').value = '';
+                document.getElementById('servicePriceInput').value = '';
+                document.getElementById('serviceFormTitle').textContent = 'Новая услуга';
+                document.getElementById('serviceSaveBtnText').textContent = 'Добавить услугу';
+                document.getElementById('serviceCancelEditBtn').style.display = 'none';
+            }
+
+            function saveService() {
+                const name = document.getElementById('serviceNameInput').value.trim();
+                const description = document.getElementById('serviceDescInput').value.trim();
+                const price = document.getElementById('servicePriceInput').value.trim();
+                if (!name) { showToast('Введи название'); return; }
+                if (!price) { showToast('Введи цену'); return; }
+
+                const data = loadData();
+                if (editingServiceId) {
+                    const idx = data.services.findIndex(s => s.id === editingServiceId);
+                    if (idx !== -1) {
+                        data.services[idx].name = name;
+                        data.services[idx].description = description;
+                        data.services[idx].price = price;
+                        if (pendingServiceMedia) data.services[idx].media = pendingServiceMedia;
+                    }
+                } else {
+                    data.services.push({
+                        id: uid(),
+                        name, description, price,
+                        media: pendingServiceMedia,
+                        createdAt: Date.now()
+                    });
+                }
+                if (saveData(data)) {
+                    showToast(editingServiceId ? 'Услуга обновлена' : 'Услуга добавлена');
+                    resetServiceForm();
+                    renderAdminLists();
+                    renderDynamicServices();
+                }
+            }
+
+            function editService(id) {
+                const data = loadData();
+                const svc = data.services.find(s => s.id === id);
+                if (!svc) return;
+                editingServiceId = id;
+                pendingServiceMedia = null;
+                document.getElementById('serviceNameInput').value = svc.name;
+                document.getElementById('serviceDescInput').value = svc.description || '';
+                document.getElementById('servicePriceInput').value = svc.price || '';
+                const preview = document.getElementById('serviceMediaPreview');
+                if (svc.media) {
+                    preview.style.display = 'block';
+                    preview.innerHTML = `<img src="${svc.media}" alt="preview" />`;
+                    document.getElementById('serviceMediaName').textContent = 'Оставь пустым, чтобы сохранить текущую картинку';
+                } else {
+                    preview.style.display = 'none';
+                }
+                document.getElementById('serviceFormTitle').textContent = 'Редактирование услуги';
+                document.getElementById('serviceSaveBtnText').textContent = 'Сохранить изменения';
+                document.getElementById('serviceCancelEditBtn').style.display = 'block';
+                document.getElementById('page-admin').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            function deleteService(id) {
+                if (!confirm('Удалить эту услугу?')) return;
+                const data = loadData();
+                data.services = data.services.filter(s => s.id !== id);
+                if (saveData(data)) {
+                    showToast('Услуга удалена');
+                    renderAdminLists();
+                    renderDynamicServices();
+                }
+            }
+
+            function renderAdminLists() {
+                const data = loadData();
+                const postsList = document.getElementById('postsAdminList');
+                const servicesList = document.getElementById('servicesAdminList');
+                if (!postsList || !servicesList) return;
+
+                if (!data.posts.length) {
+                    postsList.innerHTML = '<div class="admin-empty">Пока нет постов. Добавь первый!</div>';
+                } else {
+                    postsList.innerHTML = data.posts.slice().reverse().map(p => `
+                        <div class="admin-item">
+                            ${p.media ? (p.mediaType === 'video' ? `<video class="thumb" src="${p.media}" muted></video>` : `<img class="thumb" src="${p.media}" alt="" />`) : `<div class="thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);"><i class="fas fa-image"></i></div>`}
+                            <div class="info">
+                                <div class="name">${escapeHtml(p.title)}</div>
+                                <div class="desc">${escapeHtml(p.description).slice(0, 80)}${p.description.length > 80 ? '…' : ''}</div>
+                            </div>
+                            <div class="actions">
+                                <button onclick="window.__adminEditPost('${p.id}')"><i class="fas fa-pen"></i></button>
+                                <button class="danger" onclick="window.__adminDeletePost('${p.id}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                if (!data.services.length) {
+                    servicesList.innerHTML = '<div class="admin-empty">Пока нет услуг. Добавь первую!</div>';
+                } else {
+                    servicesList.innerHTML = data.services.slice().reverse().map(s => `
+                        <div class="admin-item">
+                            ${s.media ? `<img class="thumb" src="${s.media}" alt="" />` : `<div class="thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);"><i class="fas fa-image"></i></div>`}
+                            <div class="info">
+                                <div class="name">${escapeHtml(s.name)}</div>
+                                <div class="desc">${escapeHtml(s.description || '').slice(0, 60)}${(s.description || '').length > 60 ? '…' : ''} • <span style="color:var(--accent);">${escapeHtml(s.price || '')}</span></div>
+                            </div>
+                            <div class="actions">
+                                <button onclick="window.__adminEditService('${s.id}')"><i class="fas fa-pen"></i></button>
+                                <button class="danger" onclick="window.__adminDeleteService('${s.id}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            window.__adminEditPost = editPost;
+            window.__adminDeletePost = deletePost;
+            window.__adminEditService = editService;
+            window.__adminDeleteService = deleteService;
+
+            // ============ WALLPAPER ADMIN ============
+            const WP_INPUTS = [
+                { inputId: 'wpDarkLiveInput',   nameId: 'wpDarkLiveName',   theme: 'dark',  type: 'live'   },
+                { inputId: 'wpDarkStaticInput', nameId: 'wpDarkStaticName', theme: 'dark',  type: 'static' },
+                { inputId: 'wpDarkSoundInput',  nameId: 'wpDarkSoundName',  theme: 'dark',  type: 'sound'  },
+                { inputId: 'wpLightLiveInput',   nameId: 'wpLightLiveName',   theme: 'light', type: 'live'   },
+                { inputId: 'wpLightStaticInput', nameId: 'wpLightStaticName', theme: 'light', type: 'static' },
+                { inputId: 'wpLightSoundInput',  nameId: 'wpLightSoundName',  theme: 'light', type: 'sound'  }
+            ];
+            const WP_REMOVES = [
+                { btnId: 'wpDarkLiveRemove',   theme: 'dark',  type: 'live',   nameId: 'wpDarkLiveName'   },
+                { btnId: 'wpDarkStaticRemove', theme: 'dark',  type: 'static', nameId: 'wpDarkStaticName' },
+                { btnId: 'wpDarkSoundRemove',  theme: 'dark',  type: 'sound',  nameId: 'wpDarkSoundName'  },
+                { btnId: 'wpLightLiveRemove',   theme: 'light', type: 'live',   nameId: 'wpLightLiveName'   },
+                { btnId: 'wpLightStaticRemove', theme: 'light', type: 'static', nameId: 'wpLightStaticName' },
+                { btnId: 'wpLightSoundRemove',  theme: 'light', type: 'sound',  nameId: 'wpLightSoundName'  }
+            ];
+
+            function wpLabelText(theme, type) {
+                const custom = getCustomWallpapers();
+                if (custom[theme] && custom[theme][type]) {
+                    return 'Свой файл задан (нажми чтобы заменить)';
+                }
+                if (type === 'sound') return 'Не задано (нет фонового звука)';
+                return 'Не задано (используется стандарт)';
+            }
+            function refreshWallpaperLabels() {
+                WP_INPUTS.forEach(cfg => {
+                    const el = document.getElementById(cfg.nameId);
+                    if (el) el.textContent = wpLabelText(cfg.theme, cfg.type);
+                });
+            }
+
+            WP_INPUTS.forEach(cfg => {
+                const input = document.getElementById(cfg.inputId);
+                if (!input) return;
+                input.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (!file) return;
+                    if (file.size > MAX_WP_FILE_SIZE) {
+                        showToast('Файл больше 4МБ. Сожми файл.');
+                        this.value = '';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const dataUrl = e.target.result;
+                        const custom = getCustomWallpapers();
+                        if (!custom[cfg.theme]) custom[cfg.theme] = {};
+                        custom[cfg.theme][cfg.type] = dataUrl;
+                        if (saveCustomWallpapers(custom)) {
+                            showToast('Загружено');
+                            const nameEl = document.getElementById(cfg.nameId);
+                            if (nameEl) nameEl.textContent = file.name + ' (' + Math.round(file.size/1024) + ' КБ)';
+                            this.value = '';
+                            if ((cfg.theme === 'light') === isLight) applyWallpaper();
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            WP_REMOVES.forEach(cfg => {
+                const btn = document.getElementById(cfg.btnId);
+                if (!btn) return;
+                btn.addEventListener('click', () => {
+                    if (!confirm('Удалить этот файл? Будет использоваться стандарт.')) return;
+                    const custom = getCustomWallpapers();
+                    if (custom[cfg.theme] && custom[cfg.theme][cfg.type]) {
+                        delete custom[cfg.theme][cfg.type];
+                        if (saveCustomWallpapers(custom)) {
+                            showToast('Удалено');
+                            const nameEl = document.getElementById(cfg.nameId);
+                            if (nameEl) nameEl.textContent = wpLabelText(cfg.theme, cfg.type);
+                            if ((cfg.theme === 'light') === isLight) applyWallpaper();
+                        }
+                    }
+                });
+            });
+
+            // ============ ADMIN EVENTS ============
+            document.getElementById('adminLoginBtn').addEventListener('click', () => {
+                const pass = document.getElementById('adminPasswordInput').value;
+                const err = document.getElementById('adminLoginError');
+                if (pass === ADMIN_PASSWORD) {
+                    setAdminAuth(true);
+                    err.style.display = 'none';
+                    document.getElementById('adminPasswordInput').value = '';
+                    showToast('Добро пожаловать!');
+                    updateAdminUI();
+                } else {
+                    err.textContent = 'Неверный пароль';
+                    err.style.display = 'block';
+                }
+            });
+            document.getElementById('adminPasswordInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter') document.getElementById('adminLoginBtn').click();
+            });
+            document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+                setAdminAuth(false);
+                showToast('Вы вышли');
+                updateAdminUI();
+            });
+
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const target = tab.dataset.tab;
+                    document.getElementById('adminTabPosts').style.display = target === 'posts' ? 'block' : 'none';
+                    document.getElementById('adminTabServices').style.display = target === 'services' ? 'block' : 'none';
+                    document.getElementById('adminTabWallpapers').style.display = target === 'wallpapers' ? 'block' : 'none';
+                    if (target === 'wallpapers') refreshWallpaperLabels();
+                });
+            });
+
+            document.getElementById('postSaveBtn').addEventListener('click', savePost);
+            document.getElementById('postCancelEditBtn').addEventListener('click', () => { resetPostForm(); });
+            document.getElementById('serviceSaveBtn').addEventListener('click', saveService);
+            document.getElementById('serviceCancelEditBtn').addEventListener('click', () => { resetServiceForm(); });
+
+            updateAdminUI();
+            renderDynamicPosts();
+            renderDynamicServices();
+
+            // ============ MAIN SITE LOGIC ============
+            const rulesOverlay = document.getElementById('rulesOverlay');
+            const agreeBtn = document.getElementById('agreeBtn');
+            if (!localStorage.getItem('rootsql-rules')) rulesOverlay.classList.add('open');
+            agreeBtn.addEventListener('click', function() {
+                localStorage.setItem('rootsql-rules', 'accepted');
+                rulesOverlay.classList.remove('open');
+            });
+
+            const langToggle = document.getElementById('langToggle');
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const sidebarClose = document.getElementById('sidebarClose');
+            const navItems = document.querySelectorAll('.sidebar__nav .nav-item');
+            const pages = {
+                home: document.getElementById('page-home'),
+                store: document.getElementById('page-store'),
+                order: document.getElementById('page-order'),
+                faq: document.getElementById('page-faq'),
+                admin: document.getElementById('page-admin'),
+            };
+            const toast = document.getElementById('toast');
+            let toastTimer = null;
+            let currentLang = 'ru';
+
+            const translations = {
+                ru: {
+                    hero_title: 'rootsql',
+                    hero_sub: 'Услуги по сбору данных, OSINT, автоматизация и не только',
+                    hero_btn_store: 'Перейти в магазин',
+                    hero_btn_order: 'Заказать',
+                    flip_front_sub: 'Добро пожаловать',
+                    flip_back_title: 'Бесплатные инструменты',
+                    flip_back_text: 'Заходи в наш <strong>Telegram</strong>, где множество <strong>бесплатных инструментов</strong> для любых задач.',
+                    flip_back_btn: 'Перейти в канал',
+                    why_title: 'Почему мы',
+                    why_anon: 'Анонимность',
+                    why_speed: 'Быстрое выполнение',
+                    why_priv: 'Приватность данных',
+                    why_support: 'Поддержка 24/7',
+                    services_title: 'Основные услуги',
+                    serv_virt: 'Вирт. номера',
+                    serv_bots: 'Боты / софты',
+                    serv_data: 'Сбор данных',
+                    serv_osint: 'OSINT-архив',
+                    serv_private: 'Приват БД',
+                    serv_snos: 'Боты для сноса',
+                    services_full: 'Полный прайс →',
+                    instruction_title: 'Инструкция',
+                    inst_1: '<strong>Прайс на сайте</strong> — нажми на три точки в углу, затем выбери <strong>«магазин»</strong>.',
+                    inst_2: '<strong>Быстрый переход в личку</strong> — скопируй мой юзернейм <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> или нажми на него, после чего сможешь написать в Telegram.',
+                    inst_3: '<strong>Чтобы избежать недопонимания</strong> — пиши конкретно, что тебя интересует. Иначе ответа не будет.',
+                    work_title: 'Как мы работаем',
+                    work_1: 'Принимаем вашу заявку в личном чате в Telegram',
+                    work_2: 'Вы оплачиваете',
+                    work_3: 'Наша работа начинается после оплаты',
+                    work_4: 'Выдаём ваш заказ в личных сообщениях в Telegram <strong>(в том же чате, где была оплата)</strong>',
+                    work_5: 'Если отвечают не сразу — значит заняты, попробуйте продублировать сообщение.',
+                    search_title: 'Поиск / Анализ — в чем разница?',
+                    analysis_label: 'Анализ',
+                    analysis_text: 'Анализ в расследовании — это систематический процесс обработки и интерпретации информации. В расследованиях анализ — метод проверки объективности информации.',
+                    search_label: 'Поиск',
+                    search_text: 'Поиск — это целенаправленный процесс действий, направленный на обнаружение чего-либо утерянного, нового или нужного. В расследованиях поиск — это обнаружение новых зацепок из исходных данных.',
+                    search_btn: 'КУПИТЬ ПРИВАТ ГДЕ БОЛЬШЕ ПРО ОСИНТ',
+                    contacts_title: 'Контакты',
+                    contacts_channel: 'Канал',
+                    contacts_pm: 'Личка',
+                    contacts_price: 'Прайс',
+                    contacts_bot: 'Бот',
+                    contacts_bot_hint: '(если спам-блок)',
+                    price_title: 'PRICE SHEET',
+                    price_virt: 'Виртуальные номера',
+                    price_soft: 'Бот / сайты / софты',
+                    price_ad: 'Реклама',
+                    price_data: 'Сбор данных',
+                    price_garant: 'Гарант',
+                    price_osint: 'Закрытый OSINT-архив',
+                    price_private: 'Архив 2 (приват)',
+                    price_bots: 'Боты / софты для сноса',
+                    price_db: 'Приват база данных',
+                    payment_label: 'Принимаю',
+                    pay_card: 'Карта РФ',
+                    pay_sbp: 'СБП по номеру телефона',
+                    pay_crypto: 'Крипта бот',
+                    pay_wallet: 'Любой крипто-кошелёк',
+                    accord_osint_title: 'Закрытый OSINT‑архив',
+                    accord_osint_text1: 'Всё, что нужно для разведки по открытым источникам, — уже собрано и разложено по полочкам. Никакого хаоса. Только структура, только польза.',
+                    accord_osint_for: 'ДЛЯ КОГО: — Новичков, кто хочет быстро войти в тему<br>— Профи, уставших собирать ссылки по закладкам',
+                    osint_week_label: 'На неделю',
+                    osint_month_label: 'На месяц',
+                    osint_forever_label: 'Навсегда',
+                    accord_osint_get: '<strong>КАК ПОЛУЧИТЬ:</strong> Купить можно в лс: <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> <span style="display:block; margin-top:2px;">Принимаю: РУБ / USDT</span> <span style="display:block; margin-top:6px; font-style:italic; color:var(--text-muted);">Стань частью закрытого OSINT-сообщества.</span>',
+                    accord_private_title: 'Продам вход в приват',
+                    accord_private_topics: '• тем: в данный момент 76+',
+                    accord_private_has: 'В привате имеется:',
+                    accord_private_more: 'Больше информации можно получить в лс',
+                    private_price_one: '— один человек',
+                    private_price_two: '— для двоих',
+                    accord_private_pay: 'Принимаю оплату: в $ / ₽<br><strong>Писать:</strong><br> • <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> — продавец<br> • <span class="copy-trigger" data-copy="@SosinafrootBot">@SosinafrootBot</span> — спам блок',
+                    accord_bots_title: 'Боты — сносоры',
+                    bots_no_session: '— боты без сессий:',
+                    bots_with_session: '— боты с сессиями:',
+                    soft_no_session: '— софты без сессий:',
+                    soft_with_session: '— софты с сессиями:',
+                    bots_session_desc: '<strong>• сессия</strong> — это аккаунты в телеграме, которые автоматически будут отправлять жалобу на другой аккаунт. По умолчанию я добавляю 50 сессий, если нужно больше — доплачивать: <strong>1 сессия = 30 руб</strong>',
+                    bots_botnet: '— бот нет:',
+                    bots_botnet_soft: '— софты в виде бот нет:',
+                    bots_botnet_desc: '<strong>• бот нет</strong> — это чужие заражённые аккаунты в телеграме. Суть та же, что и с сессиями, но тут чутка по-другому: вместо покупки сессий — воруешь или с помощью соц. инженерии заражаешь чужой аккаунт.',
+                    bots_scam: '— боты для скама:',
+                    bots_troll: '— софты для троллинга:',
+                    bots_business: '— боты для бизнеса:',
+                    bots_scam_desc: '<strong>• боты для скама</strong> — визуальный бот, который ты сможешь продавать другим людям со своими правилами и ценами.<br><strong>• софты для троллинга</strong> — тоже визуальный, но более устрашающе придуман для шуток.<br><strong>• боты для бизнеса</strong> — боты под твой вкус и выбор, под твои нужды и для бизнеса (не выхода от темы сноса).',
+                    bots_other: '— другое',
+                    bots_other1: '<strong>• дополнить функционал под свой вкус</strong>',
+                    bots_other2: '<strong>• поменять дизайн</strong>',
+                    bots_other3: '<strong>• заменить старый или добавить новый</strong>',
+                    bots_other4: '<strong>• изменить софт или удалить не нужные функции</strong>',
+                    bots_note: 'больше информации можно получить в лс:)',
+                    order_title: 'Быстрый заказ',
+                    order_sub: 'Выберите услугу и напишите комментарий — мы свяжемся с вами в Telegram.',
+                    order_service_label: 'Услуга',
+                    order_select: 'выберите',
+                    order_virt: 'Виртуальные номера',
+                    order_soft: 'Бот / сайты / софты',
+                    order_ad: 'Реклама',
+                    order_data: 'Сбор данных',
+                    order_garant: 'Гарант',
+                    order_osint: 'OSINT архив',
+                    order_private: 'Архив 2 (приват)',
+                    order_bots: 'Боты / софты для сноса',
+                    order_db: 'Приват база данных',
+                    order_comment_label: 'Комментарий (дополнительные пожелания)',
+                    order_comment_placeholder: 'Опишите, что именно нужно...',
+                    order_submit: 'Отправить заявку',
+                    nav_home: 'Главное меню',
+                    nav_store: 'Магазин',
+                    nav_order: 'Заказать',
+                    nav_channel: 'Наш канал',
+                    nav_instruction: 'Инструкция',
+                    footer_channel: 'наш телеграм канал — @date_bad'
+                },
+                en: {
+                    hero_title: 'rootsql',
+                    hero_sub: 'Data collection, OSINT, automation and more',
+                    hero_btn_store: 'Go to store',
+                    hero_btn_order: 'Order',
+                    flip_front_sub: 'Welcome',
+                    flip_back_title: 'Free tools',
+                    flip_back_text: 'Visit our <strong>Telegram</strong> channel for many <strong>free tools</strong> for any task.',
+                    flip_back_btn: 'Go to channel',
+                    why_title: 'Why us',
+                    why_anon: 'Anonymous',
+                    why_speed: 'Fast execution',
+                    why_priv: 'Privacy',
+                    why_support: '24/7 Support',
+                    services_title: 'Main services',
+                    serv_virt: 'Virtual numbers',
+                    serv_bots: 'Bots / software',
+                    serv_data: 'Data collection',
+                    serv_osint: 'OSINT archive',
+                    serv_private: 'Private DB',
+                    serv_snos: 'Take-down bots',
+                    services_full: 'Full price →',
+                    instruction_title: 'Instruction',
+                    inst_1: '<strong>Price on site</strong> — click the three dots in the corner, then select <strong>«store»</strong>.',
+                    inst_2: '<strong>Quick contact</strong> — copy my username <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> or click on it, then you can write in Telegram.',
+                    inst_3: '<strong>To avoid misunderstandings</strong> — write specifically what you are interested in. Otherwise there will be no answer.',
+                    work_title: 'How we work',
+                    work_1: 'We accept your request in a personal Telegram chat',
+                    work_2: 'You pay',
+                    work_3: 'Our work begins after payment',
+                    work_4: 'We give your order in personal messages in Telegram <strong>(in the same chat where the payment was made)</strong>',
+                    work_5: 'If they don\'t answer immediately — busy, try duplicating the message.',
+                    search_title: 'Search / Analysis — what\'s the difference?',
+                    analysis_label: 'Analysis',
+                    analysis_text: 'Analysis in an investigation is a systematic process of processing and interpreting information. In investigations, analysis is a method of verifying the objectivity of information.',
+                    search_label: 'Search',
+                    search_text: 'Search is a purposeful process of actions aimed at discovering something lost, new or needed. In investigations, search is the discovery of new leads from the initial data.',
+                    search_btn: 'BUY PRIVATE WHERE MORE ABOUT OSINT',
+                    contacts_title: 'Contacts',
+                    contacts_channel: 'Channel',
+                    contacts_pm: 'PM',
+                    contacts_price: 'Price',
+                    contacts_bot: 'Bot',
+                    contacts_bot_hint: '(if spam block)',
+                    price_title: 'PRICE SHEET',
+                    price_virt: 'Virtual numbers',
+                    price_soft: 'Bot / websites / software',
+                    price_ad: 'Advertising',
+                    price_data: 'Data collection',
+                    price_garant: 'Guarantee',
+                    price_osint: 'Closed OSINT archive',
+                    price_private: 'Archive 2 (private)',
+                    price_bots: 'Bots / software for take-down',
+                    price_db: 'Private database',
+                    payment_label: 'I accept',
+                    pay_card: 'Russian card',
+                    pay_sbp: 'SBP by phone number',
+                    pay_crypto: 'Crypto bot',
+                    pay_wallet: 'Any crypto wallet',
+                    accord_osint_title: 'Closed OSINT archive',
+                    accord_osint_text1: 'Everything you need for open source intelligence is already collected and organized. No chaos. Only structure, only benefit.',
+                    accord_osint_for: 'FOR: — Beginners who want to quickly get into the topic<br>— Pros tired of collecting bookmarks',
+                    osint_week_label: ' Weekly',
+                    osint_month_label: ' Monthly',
+                    osint_forever_label: ' Forever',
+                    accord_osint_get: '<strong>HOW TO GET:</strong> Buy in PM: <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> <span style="display:block; margin-top:2px;">I accept: RUB / USDT</span> <span style="display:block; margin-top:6px; font-style:italic; color:var(--text-muted);">Become part of the closed OSINT community.</span>',
+                    accord_private_title: 'Selling access to private',
+                    accord_private_topics: '• topics: currently 76+',
+                    accord_private_has: 'Private contains :',
+                    accord_private_more: 'More info can be obtained in PM',
+                    private_price_one: '— one person',
+                    private_price_two: '— for two',
+                    accord_private_pay: 'Payment: in $ / ₽<br><strong>Write:</strong><br> • <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> — seller<br> • <span class="copy-trigger" data-copy="@SosinafrootBot">@SosinafrootBot</span> — spam block',
+                    accord_bots_title: 'Bots — take-down',
+                    bots_no_session: '— bots without sessions:',
+                    bots_with_session: '— bots with sessions:',
+                    soft_no_session: '— software without sessions:',
+                    soft_with_session: '— software with sessions:',
+                    bots_session_desc: '<strong>• session</strong> — these are Telegram accounts that will automatically send complaints to another account. By default I add 50 sessions, if you need more — extra charge: <strong>1 session = 30 rub</strong>',
+                    bots_botnet: '— botnet:',
+                    bots_botnet_soft: '— software as botnet:',
+                    bots_botnet_desc: '<strong>• botnet</strong> — these are other people\'s infected Telegram accounts. The essence is the same as with sessions, but here it\'s different.',
+                    bots_scam: '— bots for scam:',
+                    bots_troll: '— software for trolling:',
+                    bots_business: '— bots for business:',
+                    bots_scam_desc: '<strong>• bots for scam</strong> — visual bot that you can sell to other people with your own rules and prices.<br><strong>• software for trolling</strong> — also visual, but more intimidating designed for jokes.<br><strong>• bots for business</strong> — bots to your taste and choice.',
+                    bots_other: '— other',
+                    bots_other1: '<strong>• add functionality to your taste</strong>',
+                    bots_other2: '<strong>• change design</strong>',
+                    bots_other3: '<strong>• replace old or add new</strong>',
+                    bots_other4: '<strong>• modify software or remove unnecessary functions</strong>',
+                    bots_note: 'All descriptions above are bold for clarity.',
+                    order_title: 'Quick order',
+                    order_sub: 'Select a service and write a comment — we will contact you in Telegram.',
+                    order_service_label: 'Service',
+                    order_select: 'select',
+                    order_virt: 'Virtual numbers',
+                    order_soft: 'Bot / websites / software',
+                    order_ad: 'Advertising',
+                    order_data: 'Data collection',
+                    order_garant: 'Guarantee',
+                    order_osint: 'OSINT archive',
+                    order_private: 'Archive 2 (private)',
+                    order_bots: 'Bots / software for take-down',
+                    order_db: 'Private database',
+                    order_comment_label: 'Comment (additional wishes)',
+                    order_comment_placeholder: 'Describe what exactly you need...',
+                    order_submit: 'Send request',
+                    nav_home: 'Main menu',
+                    nav_store: 'Store',
+                    nav_order: 'Order',
+                    nav_channel: 'Our channel',
+                    nav_instruction: 'Instruction',
+                    footer_channel: 'our telegram channel — @date_bad'
+                }
+            };
+
+            function setLanguage(lang) {
+                currentLang = lang;
+                langToggle.textContent = lang === 'ru' ? 'RUS' : 'ENG';
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (translations[lang] && translations[lang][key] !== undefined) el.innerHTML = translations[lang][key];
+                });
+                document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                    const key = el.getAttribute('data-i18n-placeholder');
+                    if (translations[lang] && translations[lang][key] !== undefined) el.placeholder = translations[lang][key];
+                });
+                localStorage.setItem('rootsql-lang', lang);
+            }
+            setLanguage(localStorage.getItem('rootsql-lang') === 'en' ? 'en' : 'ru');
+            langToggle.addEventListener('click', () => setLanguage(currentLang === 'ru' ? 'en' : 'ru'));
+
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = themeToggle.querySelector('i');
+            const bgVideo = document.getElementById('bgVideo');
+            const bgImage = document.getElementById('bgImage');
+            const bgAudio = document.getElementById('bgAudio');
+            let activeContentVideo = null;
+            let isLight = localStorage.getItem('rootsql-theme') === 'light';
+            let wallpaperType = localStorage.getItem('optWallpaperType') || 'live';
+            let wallpaperSound = localStorage.getItem('optBgSound') === 'true';
+            let wallpaperPlayRequested = false;
+            let wallpaperPausedByContent = false;
+            let wallpaperPlayWarningShown = false;
+            function validWallpaperType(v){ return v === 'static' || v === 'live' ? v : 'live'; }
+
+            function pauseWallpaperMedia() {
+                try { bgVideo.pause(); } catch(_) {}
+                try { bgAudio.pause(); } catch(_) {}
+            }
+
+            async function playWallpaper(userGesture=false){
+                if(document.hidden) return false;
+                if(document.body.classList.contains('wallpaper-video-paused') ||
+                   document.getElementById('optFixBg')?.checked) return false;
+                const theme = isLight ? 'light' : 'dark';
+                const customSound = getWallpaperSrc(theme, 'sound');
+                const wantedSound = !!wallpaperSound;
+
+                // Prepare audio source
+                if (customSound) {
+                    if (bgAudio.getAttribute('src') !== customSound) {
+                        bgAudio.src = customSound;
+                        bgAudio.load();
+                    }
+                    bgAudio.loop = true;
+                } else {
+                    if (bgAudio.getAttribute('src')) {
+                        bgAudio.pause();
+                        bgAudio.removeAttribute('src');
+                        bgAudio.load();
+                    }
+                }
+
+                // Live video
+                if (wallpaperType === 'live') {
+                    bgVideo.loop = true;
+                    wallpaperPlayRequested = true;
+                    try {
+                        bgVideo.muted = customSound ? true : (userGesture ? !wantedSound : true);
+                        await bgVideo.play();
+                        if(userGesture && !customSound) bgVideo.muted = !wantedSound;
+                        wallpaperPlayWarningShown = false;
+                    } catch(err) {
+                        try {
+                            bgVideo.muted = true;
+                            await bgVideo.play();
+                            if(userGesture && wantedSound && !customSound) bgVideo.muted = false;
+                            wallpaperPlayWarningShown = false;
+                        } catch(err2) {
+                            if(!wallpaperPlayWarningShown && !document.hidden) wallpaperPlayWarningShown = true;
+                        }
+                    }
+                }
+
+                // Custom background music
+                if (customSound) {
+                    bgAudio.muted = !wantedSound;
+                    if (wantedSound) {
+                        try { await bgAudio.play(); } catch(e) {}
+                    } else {
+                        bgAudio.pause();
+                    }
+                }
+                return true;
+            }
+
+            function applyWallpaper(){
+                wallpaperType = validWallpaperType(wallpaperType);
+                const theme = isLight ? 'light' : 'dark';
+                const src = getWallpaperSrc(theme, wallpaperType);
+                const customSound = getWallpaperSrc(theme, 'sound');
+                localStorage.setItem('optWallpaperType', wallpaperType);
+
+                // Sound element source
+                if (customSound) {
+                    if (bgAudio.getAttribute('src') !== customSound) {
+                        bgAudio.src = customSound;
+                        bgAudio.load();
+                    }
+                    bgAudio.loop = true;
+                } else {
+                    if (bgAudio.getAttribute('src')) {
+                        bgAudio.pause();
+                        bgAudio.removeAttribute('src');
+                        bgAudio.load();
+                    }
+                }
+
+                if(wallpaperType==='static'){
+                    document.body.classList.add('wallpaper-static');
+                    document.body.classList.remove('wallpaper-video-paused');
+                    bgVideo.pause(); bgVideo.removeAttribute('src'); bgVideo.load();
+                    bgImage.src = src || '';
+                    // Try to play audio for static wallpaper
+                    if (customSound && wallpaperSound && !document.getElementById('optFixBg')?.checked && !activeContentVideo) {
+                        bgAudio.muted = false;
+                        bgAudio.play().catch(()=>{});
+                    }
+                    return;
+                }
+                document.body.classList.remove('wallpaper-static');
+                bgImage.src='';
+                if(bgVideo.getAttribute('src') !== src) { bgVideo.src=src; bgVideo.load(); }
+                bgVideo.loop=true;
+                if(customSound) bgVideo.muted = true;
+                else bgVideo.muted = !!activeContentVideo || !wallpaperSound;
+                if(document.getElementById('optFixBg')?.checked || activeContentVideo){
+                    document.body.classList.add('wallpaper-video-paused');
+                    pauseWallpaperMedia();
+                } else {
+                    document.body.classList.remove('wallpaper-video-paused');
+                    playWallpaper(false);
+                }
+            }
+            function setTheme(light){ isLight=!!light; document.body.classList.toggle('light',isLight); themeIcon.className=isLight?'fas fa-sun':'fas fa-moon'; localStorage.setItem('rootsql-theme',isLight?'light':'dark'); applyWallpaper(); }
+            setTheme(isLight);
+            themeToggle.addEventListener('click',()=>setTheme(!isLight));
+
+            const flipInner = document.getElementById('flipCardInner');
+            const flipWrap = document.getElementById('flipCardWrap');
+            let flipTimer = null, isFlipped = false;
+            function flipCard() { isFlipped = !isFlipped; flipInner.classList.toggle('flipped', isFlipped); }
+            function resetFlipTimer() { if (flipTimer) clearInterval(flipTimer); flipTimer = setInterval(flipCard, 3500); }
+            if (flipWrap) {
+                flipWrap.addEventListener('click', function(e) { if (e.target.closest('.flip-back-btn') || e.target.closest('a')) return; flipCard(); resetFlipTimer(); });
+                flipWrap.addEventListener('mouseenter', function() { if (flipTimer) clearInterval(flipTimer); });
+                flipWrap.addEventListener('mouseleave', resetFlipTimer);
+                resetFlipTimer();
+            }
+
+            let savedBodyOverflow = '';
+            function lockBodyScroll(){ if(!document.body.classList.contains('ui-scroll-locked')){ savedBodyOverflow=document.body.style.overflow || ''; document.body.classList.add('ui-scroll-locked'); document.body.style.overflow='hidden'; }}
+            function unlockBodyScroll(){ document.body.classList.remove('ui-scroll-locked'); document.body.style.overflow=savedBodyOverflow; savedBodyOverflow=''; }
+            function openSidebar() { sidebar.classList.add('open'); sidebarOverlay.classList.add('open'); lockBodyScroll(); }
+            function closeSidebar() { sidebar.classList.remove('open'); sidebarOverlay.classList.remove('open'); unlockBodyScroll(); }
+            menuToggle.addEventListener('click', openSidebar);
+            sidebarClose.addEventListener('click', closeSidebar);
+            sidebarOverlay.addEventListener('click', closeSidebar);
+
+            window.navigateTo = function(pageId, updateHash=true) {
+                if (!pages[pageId]) return;
+                if (typeof contentVideos === 'function') contentVideos().forEach(v => { try { v.pause(); } catch (_) {} });
+                activeContentVideo = null;
+                Object.keys(pages).forEach(key => { pages[key].classList.remove('active'); });
+                pages[pageId].classList.add('active');
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('data-page') === pageId) item.classList.add('active');
+                });
+                if(updateHash && ['home','store','order','faq','admin'].includes(pageId)) history.replaceState(null,'','#'+pageId);
+                closeSidebar();
+                window.scrollTo({top:0,behavior:'smooth'});
+                if (pageId === 'admin') updateAdminUI();
+            };
+            window.addEventListener('hashchange',()=>{
+                const page=location.hash.slice(1);
+                if(['home','store','order','faq','admin'].includes(page)) window.navigateTo(page,false);
+            });
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    const page = this.getAttribute('data-page');
+                    const action = this.getAttribute('data-action');
+                    if (page) {
+                        if (page === 'settings') { openSettings(); return; }
+                        window.navigateTo(page);
+                    } else if (action === 'channel') {
+                        window.open('https://t.me/date_bad', '_blank');
+                        closeSidebar();
+                    } else if (action === 'instructions') {
+                        if (!pages.home.classList.contains('active')) window.navigateTo('home');
+                        setTimeout(() => {
+                            const instruction = document.querySelector('#page-home .instruction-list');
+                            const target = instruction ? instruction.closest('.card') : null;
+                            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 150);
+                        closeSidebar();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.copy-trigger').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const text = this.getAttribute('data-copy');
+                    if (text) copyText(text, 'Скопировано: ' + text);
+                });
+            });
+
+            const orderForm = document.getElementById('orderForm');
+            if (orderForm) {
+                orderForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const service = document.getElementById('serviceSelect').value;
+                    const comment = document.getElementById('comment').value.trim();
+                    if (!service) { showToast('Пожалуйста, выберите услугу'); return; }
+                    let message = 'Здравствуйте! Хочу заказать: ' + service;
+                    if (comment) message += '\nКомментарий: ' + comment;
+                    message += '\n\n(отправлено через сайт)';
+                    const encoded = encodeURIComponent(message);
+                    let opened = false;
+                    try {
+                        const popup = window.open('tg://resolve?domain=rootsql&text=' + encoded, '_blank');
+                        opened = !!popup;
+                    } catch(_) {}
+                    setTimeout(() => {
+                        if(!opened) {
+                            const fallback = document.createElement('a');
+                            fallback.href = 'https://t.me/rootsql?text=' + encoded;
+                            fallback.target = '_blank'; fallback.rel = 'noopener';
+                            document.body.appendChild(fallback); fallback.click(); fallback.remove();
+                        }
+                    }, 250);
+                    showToast(opened ? 'Telegram открывается…' : 'Открываем Telegram…');
+                });
+            }
+
+            function copyText(text, message) {
+                if (!text) return;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => showToast(message || 'Скопировано!')).catch(() => fallbackCopy(text, message));
+                } else fallbackCopy(text, message);
+            }
+            function fallbackCopy(text, message) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text; textarea.style.position = 'fixed'; textarea.style.left = '-9999px'; textarea.style.top = '-9999px';
+                document.body.appendChild(textarea); textarea.focus(); textarea.select();
+                try {
+                    const ok = document.execCommand('copy');
+                    showToast(ok ? (message || 'Скопировано!') : 'Не удалось скопировать: ' + text);
+                } catch (_) { showToast('Не удалось скопировать: ' + text); }
+                document.body.removeChild(textarea);
+            }
+            function showToast(msg) {
+                if (toastTimer) clearTimeout(toastTimer);
+                toast.textContent = msg;
+                toast.classList.add('show');
+                toastTimer = setTimeout(() => { toast.classList.remove('show'); toastTimer = null; }, 2200);
+            }
+
+            document.querySelectorAll('.accordion-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    const targetId = this.dataset.target;
+                    const accordion = document.getElementById(targetId);
+                    if (accordion) accordion.classList.toggle('open');
+                });
+            });
+
+            const scrollBtn = document.getElementById('scrollTopBtn');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) scrollBtn.classList.add('visible');
+                else scrollBtn.classList.remove('visible');
+            });
+            scrollBtn.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+
+            let targetDx = 0, targetDy = 0, currentDx = 0, currentDy = 0;
+            let gyroActive = false, gyroLoopRunning = false, autoMove = true, autoLoopRunning = false, autoAngle = 0;
+            const blocks = document.querySelectorAll('.card, .post-section, .accordion, .legal-footer');
+            const sensitivity = 0.08, maxShift = 15, lerpFactor = 0.12;
+            function applyShift(dx,dy){ blocks.forEach(el=>{ el.style.setProperty('--shift-x', dx.toFixed(2)+'px'); el.style.setProperty('--shift-y', dy.toFixed(2)+'px'); }); }
+            function autoAnimate(){
+                if(autoLoopRunning || !autoMove) return;
+                autoLoopRunning=true;
+                const tick=()=>{
+                    if(!autoMove){ autoLoopRunning=false; return; }
+                    autoAngle += .008; applyShift(Math.sin(autoAngle)*2.5, Math.cos(autoAngle*.7)*2);
+                    requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            }
+            function smoothGyro(){
+                if(gyroLoopRunning) return;
+                gyroLoopRunning=true;
+                const tick=()=>{
+                    if(!gyroActive){ gyroLoopRunning=false; return; }
+                    currentDx += (targetDx-currentDx)*lerpFactor; currentDy += (targetDy-currentDy)*lerpFactor;
+                    applyShift(currentDx,currentDy); requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            }
+            function handleOrientation(event){
+                const checkbox=document.getElementById('optGyro');
+                if(!checkbox?.checked){ gyroActive=false; return; }
+                const beta=Number(event.beta)||0, gamma=Number(event.gamma)||0;
+                targetDx=Math.max(-maxShift,Math.min(maxShift,gamma*sensitivity));
+                targetDy=Math.max(-maxShift,Math.min(maxShift,beta*sensitivity*.6));
+                gyroActive=true; autoMove=false; smoothGyro();
+            }
+            let orientationListenerAttached=false;
+            async function enableOrientation(){
+                if(!document.getElementById('optGyro')?.checked || orientationListenerAttached) return;
+                try {
+                    if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){
+                        const state=await DeviceOrientationEvent.requestPermission();
+                        if(state!=='granted') return;
+                    }
+                    if(typeof DeviceOrientationEvent==='undefined') return;
+                    window.addEventListener('deviceorientation',handleOrientation,{passive:true});
+                    orientationListenerAttached=true;
+                    smoothGyro();
+                } catch(err){ }
+            }
+            document.addEventListener('click',()=>{ enableOrientation(); playWallpaper(true); },{passive:true});
+            if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission!=='function') enableOrientation();
+            if(localStorage.getItem('optGyro')!=='false') setTimeout(enableOrientation,300);
+            autoAnimate();
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    contentVideos().forEach(v => { try { v.pause(); } catch (_) {} });
+                    pauseWallpaperMedia();
+                    bgVideo.muted = true;
+                    activeContentVideo = null;
+                } else {
+                    if (!contentVideos().some(v => !v.paused && !v.ended) &&
+                        !document.getElementById('optFixBg')?.checked && !wallpaperPausedByContent) {
+                        playWallpaper(false);
+                    }
+                }
+            });
+            window.addEventListener('pageshow', () => {
+                if (!contentVideos().some(v => !v.paused && !v.ended) &&
+                    !document.getElementById('optFixBg')?.checked && !wallpaperPausedByContent) {
+                    playWallpaper(false);
+                }
+            });
+
+            const sidebarEl = document.getElementById('sidebar');
+            let sidebarInteraction = false, sidebarTimeout = null;
+            function resetSidebarOpacity() { sidebarEl.classList.remove('interacting'); document.getElementById('menuToggle').classList.remove('interacting'); sidebarInteraction = false; }
+            function handleSidebarInteraction() { sidebarEl.classList.add('interacting'); document.getElementById('menuToggle').classList.add('interacting'); sidebarInteraction = true; if (sidebarTimeout) clearTimeout(sidebarTimeout); sidebarTimeout = setTimeout(resetSidebarOpacity, 3200); }
+            sidebarEl.addEventListener('touchstart', handleSidebarInteraction);
+            sidebarEl.addEventListener('touchend', function() { if (sidebarTimeout) clearTimeout(sidebarTimeout); sidebarTimeout = setTimeout(resetSidebarOpacity, 3200); });
+            sidebarEl.addEventListener('mousedown', handleSidebarInteraction);
+            sidebarEl.addEventListener('mouseup', function() { if (sidebarTimeout) clearTimeout(sidebarTimeout); sidebarTimeout = setTimeout(resetSidebarOpacity, 3200); });
+            sidebarEl.addEventListener('mouseleave', function() { if (sidebarInteraction) { if (sidebarTimeout) clearTimeout(sidebarTimeout); sidebarTimeout = setTimeout(resetSidebarOpacity, 300); } });
+
+            const settingsOverlay = document.getElementById('settingsOverlay');
+            const settingsClose = document.getElementById('settingsClose');
+            const settingsNavBtn = document.getElementById('settingsNavBtn');
+            function openSettings() { settingsOverlay.classList.add('open'); sidebar.classList.remove('open'); sidebarOverlay.classList.remove('open'); lockBodyScroll(); }
+            function closeSettings() { settingsOverlay.classList.remove('open'); if(!sidebar.classList.contains('open')) unlockBodyScroll(); }
+            settingsNavBtn.addEventListener('click', openSettings);
+            settingsClose.addEventListener('click', closeSettings);
+            settingsOverlay.addEventListener('click', function(e) { if (e.target === this) closeSettings(); });
+
+            const optGyro = document.getElementById('optGyro');
+            const optCardAnim = document.getElementById('optCardAnim');
+            const optFixBg = document.getElementById('optFixBg');
+            const optBgSound = document.getElementById('optBgSound');
+            const optWallpaperType = document.getElementById('optWallpaperType');
+            const optOptimize = document.getElementById('optOptimize');
+            const optFont = document.getElementById('optFont');
+
+            const contentVideos = () => Array.from(document.querySelectorAll('video:not(#bgVideo)'));
+            let wallpaperResumeAfterContent = false, suppressContentPauseResume = false;
+            function pauseAllContentVideos(except = null) { contentVideos().forEach(v => { if (v !== except) { try { v.pause(); } catch (_) {} } }); }
+            function stopWallpaperForContent() {
+                wallpaperPausedByContent = true;
+                wallpaperResumeAfterContent = wallpaperType === 'live' && !document.hidden && !document.getElementById('optFixBg')?.checked;
+                pauseWallpaperMedia();
+                bgVideo.muted = true;
+                document.body.classList.add('wallpaper-video-paused');
+            }
+            async function resumeWallpaperAfterContent() {
+                if (activeContentVideo || !wallpaperResumeAfterContent) return;
+                wallpaperResumeAfterContent = false; wallpaperPausedByContent = false;
+                document.body.classList.remove('wallpaper-video-paused');
+                if (wallpaperType === 'live' && !document.hidden && !document.getElementById('optFixBg')?.checked) await playWallpaper(false);
+            }
+            function onContentVideoPlay(video) {
+                suppressContentPauseResume = true;
+                pauseAllContentVideos(video);
+                suppressContentPauseResume = false;
+                activeContentVideo = video;
+                stopWallpaperForContent();
+            }
+            function onContentVideoStop(video) {
+                if (activeContentVideo === video) activeContentVideo = null;
+                if (!suppressContentPauseResume) {
+                    const anotherPlaying = contentVideos().some(v => !v.paused && !v.ended);
+                    if (!anotherPlaying) resumeWallpaperAfterContent();
+                }
+            }
+            document.addEventListener('play', function(e) {
+                const video = e.target;
+                if (!(video instanceof HTMLVideoElement) || video.id === 'bgVideo') return;
+                onContentVideoPlay(video);
+            }, true);
+            document.addEventListener('pause', function(e) {
+                const video = e.target;
+                if (!(video instanceof HTMLVideoElement) || video.id === 'bgVideo') return;
+                onContentVideoStop(video);
+            }, true);
+            document.addEventListener('ended', function(e) {
+                const video = e.target;
+                if (!(video instanceof HTMLVideoElement) || video.id === 'bgVideo') return;
+                onContentVideoStop(video);
+            }, true);
+
+            let videoVisibilityObserver = null;
+            function setupContentVideoVisibility() {
+                if (videoVisibilityObserver) videoVisibilityObserver.disconnect();
+                const videos = contentVideos();
+                if (!videos.length || !('IntersectionObserver' in window)) return;
+                videoVisibilityObserver = new IntersectionObserver(entries => {
+                    entries.forEach(entry => {
+                        const video = entry.target;
+                        if (!entry.isIntersecting || entry.intersectionRatio < 0.20) { if (!video.paused) video.pause(); }
+                    });
+                }, { threshold: [0, 0.20, 0.5, 1] });
+                videos.forEach(v => videoVisibilityObserver.observe(v));
+            }
+            setupContentVideoVisibility();
+
+            function loadSettings() {
+                optGyro.checked = localStorage.getItem('optGyro') !== 'false';
+                optCardAnim.checked = localStorage.getItem('optCardAnim') !== 'false';
+                optFixBg.checked = localStorage.getItem('optFixBg') === 'true';
+                optBgSound.checked = localStorage.getItem('optBgSound') === 'true';
+                optWallpaperType.value = validWallpaperType(localStorage.getItem('optWallpaperType') || 'live');
+                wallpaperType = optWallpaperType.value; wallpaperSound = optBgSound.checked; applyWallpaper();
+                optOptimize.checked = localStorage.getItem('optOptimize') === 'true';
+                optFont.value = localStorage.getItem('optFont') || 'inter';
+                if (!optCardAnim.checked) document.body.classList.add('no-card-animation');
+                else document.body.classList.remove('no-card-animation');
+                if (optOptimize.checked) document.body.classList.add('optimized');
+                else document.body.classList.remove('optimized');
+                document.body.className = document.body.className.replace(/font-\w+/g, '');
+                document.body.classList.add('font-' + optFont.value);
+                const video = document.getElementById('bgVideo');
+                if (video) {
+                    if (optFixBg.checked) { document.body.classList.add('wallpaper-video-paused'); pauseWallpaperMedia(); }
+                    else { document.body.classList.remove('wallpaper-video-paused'); playWallpaper(false); }
+                }
+            }
+            loadSettings();
+
+            optGyro.addEventListener('change', function() {
+                localStorage.setItem('optGyro', this.checked ? 'true' : 'false');
+                if (!this.checked) { gyroActive=false; autoMove=true; currentDx=currentDy=targetDx=targetDy=0; applyShift(0,0); autoAnimate(); }
+                else { autoMove=false; enableOrientation(); }
+            });
+            optCardAnim.addEventListener('change', function() {
+                localStorage.setItem('optCardAnim', this.checked ? 'true' : 'false');
+                document.body.classList.toggle('no-card-animation', !this.checked);
+            });
+            optFixBg.addEventListener('change', function(){
+                localStorage.setItem('optFixBg',this.checked?'true':'false');
+                if(this.checked){ document.body.classList.add('wallpaper-video-paused'); wallpaperResumeAfterContent = false; pauseWallpaperMedia(); bgVideo.muted = true; }
+                else if (!activeContentVideo) { document.body.classList.remove('wallpaper-video-paused'); playWallpaper(true); }
+            });
+            optBgSound.addEventListener('change',function(){
+                wallpaperSound=this.checked;
+                localStorage.setItem('optBgSound',wallpaperSound?'true':'false');
+                const theme = isLight ? 'light' : 'dark';
+                const customSound = getWallpaperSrc(theme, 'sound');
+                if (customSound) {
+                    bgAudio.muted = !wallpaperSound;
+                    if (!activeContentVideo && !optFixBg.checked) playWallpaper(true);
+                } else if(bgVideo && wallpaperType==='live'){
+                    bgVideo.muted = !!activeContentVideo || !wallpaperSound;
+                    if(!activeContentVideo && !optFixBg.checked) playWallpaper(true);
+                }
+            });
+            optWallpaperType.addEventListener('change',function(){
+                wallpaperType=validWallpaperType(this.value); this.value=wallpaperType;
+                document.body.classList.remove('wallpaper-video-paused');
+                localStorage.setItem('optWallpaperType',wallpaperType); applyWallpaper();
+            });
+            optOptimize.addEventListener('change', function() {
+                localStorage.setItem('optOptimize', this.checked);
+                document.body.classList.toggle('optimized', this.checked);
+            });
+            optFont.addEventListener('change', function() {
+                localStorage.setItem('optFont', this.value);
+                document.body.className = document.body.className.replace(/font-\w+/g, '');
+                document.body.classList.add('font-' + this.value);
+            });
+
+            document.getElementById('optRereadRules').addEventListener('click', function() {
+                rulesOverlay.classList.add('open');
+                closeSettings();
+            });
+
+            const resultDisplay = document.getElementById('calcResult');
+            const expressionDisplay = document.getElementById('calcExpression');
+            let currentInput = '0', previousInput = '', operator = null, waitingForOperand = false, shouldResetInput = false;
+            function updateDisplay() {
+                resultDisplay.textContent = currentInput || '0';
+                if (operator && previousInput) {
+                    let opSymbol = operator;
+                    if (operator === '*') opSymbol = '×';
+                    else if (operator === '/') opSymbol = '÷';
+                    expressionDisplay.textContent = previousInput + ' ' + opSymbol;
+                } else expressionDisplay.textContent = '';
+            }
+            function inputDigit(digit) {
+                if (shouldResetInput) { currentInput = '0'; shouldResetInput = false; }
+                if (waitingForOperand) { currentInput = digit; waitingForOperand = false; }
+                else {
+                    if (digit === '.' && currentInput.includes('.')) return;
+                    if (currentInput === '0' && digit !== '.') currentInput = digit;
+                    else currentInput += digit;
+                }
+                updateDisplay();
+            }
+            function inputOperator(op) {
+                const current = parseFloat(currentInput);
+                if (operator && !waitingForOperand) {
+                    const result = compute(parseFloat(previousInput), current, operator);
+                    currentInput = String(result);
+                    previousInput = currentInput;
+                } else previousInput = currentInput;
+                operator = op; waitingForOperand = true; shouldResetInput = false; updateDisplay();
+            }
+            function compute(a, b, op) {
+                switch (op) {
+                    case '+': return a + b;
+                    case '-': return a - b;
+                    case '*': return a * b;
+                    case '/': return b !== 0 ? a / b : 'Error';
+                    case '%': return a % b;
+                    default: return b;
+                }
+            }
+            function equals() {
+                const current = parseFloat(currentInput);
+                if (operator && !waitingForOperand) {
+                    const result = compute(parseFloat(previousInput), current, operator);
+                    let opSymbol = operator;
+                    if (operator === '*') opSymbol = '×';
+                    else if (operator === '/') opSymbol = '÷';
+                    expressionDisplay.textContent = previousInput + ' ' + opSymbol + ' ' + currentInput + ' =';
+                    currentInput = String(result);
+                    operator = null; previousInput = ''; waitingForOperand = false; shouldResetInput = true;
+                    updateDisplay();
+                }
+            }
+            function clearAll() {
+                currentInput = '0'; previousInput = ''; operator = null;
+                waitingForOperand = false; shouldResetInput = false;
+                expressionDisplay.textContent = '';
+                updateDisplay();
+            }
+            function backspace() {
+                if (currentInput.length > 1) currentInput = currentInput.slice(0, -1);
+                else currentInput = '0';
+                updateDisplay();
+            }
+            document.getElementById('calcGrid').addEventListener('click', function(e) {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const action = btn.dataset.action, value = btn.dataset.value;
+                if (action === 'digit') inputDigit(value);
+                else if (action === 'operator') inputOperator(value);
+                else if (action === 'equals') equals();
+                else if (action === 'clear') clearAll();
+                else if (action === 'backspace') backspace();
+            });
+
+            const animateElements = document.querySelectorAll('.animate-on-scroll');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+            }, { threshold: 0.1 });
+            animateElements.forEach(el => observer.observe(el));
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key !== 'Escape') return;
+                if (settingsOverlay.classList.contains('open')) { closeSettings(); return; }
+                if (sidebar.classList.contains('open')) closeSidebar();
+            });
+            if (window.location.hash === '#store') setTimeout(() => window.navigateTo('store'), 100);
+            else if (window.location.hash === '#order') setTimeout(() => window.navigateTo('order'), 100);
+            else if (window.location.hash === '#faq') setTimeout(() => window.navigateTo('faq'), 100);
+            else if (window.location.hash === '#admin') setTimeout(() => window.navigateTo('admin'), 100);
+        })();
+    </script>
+</body>
+</html>
