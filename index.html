@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>rootsql — услуги</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<style>
+*{-webkit-tap-highlight-color:transparent}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#1a1a1a;--surface:rgba(255,255,255,.22);--surface-hover:rgba(255,255,255,.35);--border:rgba(255,255,255,.15);--text:#f0f0f0;--text-secondary:#b0b0b0;--text-muted:#888;--accent:#aaa;--radius:16px;--radius-sm:10px;--shadow:0 8px 32px rgba(0,0,0,.6);--transition:.30s cubic-bezier(.25,.46,.45,.94);--glass-blur:20px;--card-bg:rgba(0,0,0,.72)}
+body.light{--bg:#f5f5f5;--surface:rgba(255,255,255,.85);--surface-hover:rgba(255,255,255,.95);--border:rgba(0,0,0,.12);--text:#1a1a1a;--text-secondary:#444;--text-muted:#777;--accent:#666;--shadow:0 8px 32px rgba(0,0,0,.15);--card-bg:rgba(255,255,255,.88)}
+html{font-size:16px;-webkit-font-smoothing:antialiased;width:100%;max-width:100%;overflow-x:hidden}
+body.ui-scroll-locked{overscroll-behavior:none}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--text);width:100%;max-width:100vw;min-width:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;overflow-x:hidden;padding:0 20px 40px;transition:background var(--transition),color var(--transition);position:relative}
+body.light{background-image:url("media/oblik.PNG");background-size:cover;background-attachment:fixed;background-position:center;background-repeat:no-repeat}
+#bgVideo{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;object-fit:cover;z-index:-2;pointer-events:none}
+#bgImage{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;object-fit:cover;z-index:-2;pointer-events:none;display:none}
+#bgAudio{display:none}
+body.wallpaper-static #bgVideo{display:none}
+body.wallpaper-static #bgImage{display:block}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:8px}
+.floating-menu-btn{position:fixed;top:20px;right:20px;z-index:60;background:var(--surface);border:1px solid var(--border);color:var(--text);width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;transition:background var(--transition),transform var(--transition),border-color var(--transition);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));box-shadow:var(--shadow);font-weight:600;padding:0;font-family:inherit;-webkit-tap-highlight-color:transparent;opacity:.35}
+.floating-menu-btn:hover,.floating-menu-btn.interacting{background:var(--surface-hover);transform:scale(1.05)}
+.floating-menu-btn:active{transform:scale(.94)}
+.main{flex:1;max-width:720px;width:100%;margin:28px auto 0;position:relative;z-index:1}
+.page{display:none;animation:fadeUp .40s ease forwards}
+.page.active{display:block}
+@keyframes fadeUp{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:translateY(0)}}
+.card{--shift-x:0px;--shift-y:0px;translate:var(--shift-x) var(--shift-y);background:var(--card-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:20px;box-shadow:var(--shadow);transition:border-color var(--transition),box-shadow var(--transition),transform .25s ease,background var(--transition);transform:perspective(800px) rotateX(0) rotateY(0) scale(1);will-change:transform;animation:floatCard 6s ease-in-out infinite}
+.card:nth-child(1){animation-delay:0s}.card:nth-child(2){animation-delay:.3s}.card:nth-child(3){animation-delay:.6s}.card:nth-child(4){animation-delay:.9s}.card:nth-child(5){animation-delay:1.2s}.card:nth-child(6){animation-delay:1.5s}.card:nth-child(7){animation-delay:1.8s}.card:nth-child(8){animation-delay:2.1s}.card:nth-child(9){animation-delay:2.4s}.card:nth-child(10){animation-delay:2.7s}
+@keyframes floatCard{0%,100%{transform:perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0)}50%{transform:perspective(800px) rotateX(2deg) rotateY(3deg) translateY(-6px)}}
+.card:hover{border-color:rgba(255,255,255,.3);box-shadow:0 12px 48px rgba(0,0,0,.7);transform:perspective(800px) rotateX(2deg) rotateY(2deg) scale(1.01)}
+body.light .card:hover{border-color:rgba(0,0,0,.2);box-shadow:0 12px 48px rgba(0,0,0,.12)}
+.card__title{font-weight:600;font-size:1.1rem;margin-bottom:10px;letter-spacing:-.01em;color:var(--text);transition:color var(--transition)}
+.card__title i{color:var(--accent);margin-right:8px;width:1.2em;text-align:center}
+.card__text{color:var(--text-secondary);line-height:1.65;font-size:.95rem;transition:color var(--transition)}
+.card__text strong{color:var(--text);font-weight:600}
+.card__text a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color var(--transition);font-weight:500}
+.card__text a:hover{border-bottom-color:var(--accent)}
+.card__text .copy-trigger{cursor:pointer;border-bottom:1px dashed var(--accent);transition:opacity var(--transition);color:var(--accent)}
+.card__text .copy-trigger:hover{opacity:.7}
+.contact-grid{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.contact-grid .row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.contact-grid .label{color:var(--text-muted);font-size:.85rem;min-width:80px}
+.contact-grid .value{color:var(--text);font-weight:500;font-size:.95rem;word-break:break-all}
+.contact-grid .value .copy-trigger{border-bottom:1px dashed var(--accent);cursor:pointer;color:var(--accent)}
+.contact-grid .value .copy-trigger:hover{opacity:.7}
+.instruction-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:12px}
+.instruction-list li{color:var(--text-secondary);line-height:1.6;font-size:.95rem;border-left:2px solid var(--accent);padding-left:14px}
+.instruction-list li strong{color:var(--text);font-weight:600}
+.steps{display:flex;flex-direction:column;gap:14px;margin-top:4px}
+.step{display:flex;gap:14px;align-items:flex-start}
+.step .num{width:28px;height:28px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.85rem;color:var(--accent);flex-shrink:0}
+.step .desc{color:var(--text-secondary);line-height:1.5;font-size:.95rem}
+.step .desc strong{color:var(--text)}
+.price-sheet{display:flex;flex-direction:column;gap:2px}
+.price-sheet .price-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
+.price-sheet .price-row:last-child{border-bottom:none}
+.price-sheet .service{font-weight:500;font-size:.95rem;color:var(--text)}
+.price-sheet .service i{color:var(--accent);margin-right:8px;width:1.2em;text-align:center;font-size:.85rem}
+.price-sheet .cost{font-weight:600;font-size:.95rem;color:var(--text);background:rgba(255,255,255,.08);padding:4px 14px;border-radius:20px;border:1px solid var(--border);white-space:nowrap}
+.price-sheet .cost.dm{color:var(--accent);border-color:var(--accent);background:rgba(255,255,255,.10)}
+body.light .price-sheet .cost{background:rgba(0,0,0,.06)}
+body.light .price-sheet .cost.dm{background:rgba(0,0,0,.08)}
+.payment-methods{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.payment-methods .label{color:var(--text-muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:block}
+.payment-methods .tags{display:flex;flex-wrap:wrap;gap:8px}
+.payment-methods .tag{background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:.8rem;color:var(--text-secondary)}
+body.light .payment-methods .tag{background:rgba(0,0,0,.05)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;color:var(--text-secondary);font-size:.9rem;margin-bottom:4px;font-weight:500}
+.form-group select,.form-group textarea{width:100%;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:.95rem;font-family:inherit;transition:border-color var(--transition)}
+.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent)}
+.form-group select option{background:#1a1a1a;color:var(--text)}
+body.light .form-group select option{background:#f5f5f5;color:#1a1a1a}
+.form-group textarea{resize:vertical;min-height:80px}
+.btn-submit{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:12px 28px;border-radius:var(--radius-sm);font-weight:600;font-size:1rem;cursor:pointer;transition:background var(--transition),transform var(--transition);width:100%}
+.btn-submit:hover{background:var(--surface-hover);transform:scale(1.02)}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:100;opacity:0;visibility:hidden;transition:opacity var(--transition),visibility var(--transition)}
+.sidebar-overlay.open{opacity:1;visibility:visible}
+.sidebar{position:fixed;top:0;right:0;width:300px;max-width:82vw;height:100%;background:rgba(20,20,20,.55);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-left:1px solid var(--border);z-index:110;padding:32px 24px 40px;transform:translateX(100%);transition:transform .35s cubic-bezier(.22,1,.36,1),background .3s ease;display:flex;flex-direction:column;overflow-y:auto;box-shadow:-8px 0 32px rgba(0,0,0,.5)}
+.sidebar.open{transform:translateX(0)}
+body.light .sidebar{background:rgba(235,235,235,.65)}
+.sidebar.interacting{background:rgba(20,20,20,.92)}
+body.light .sidebar.interacting{background:rgba(235,235,235,.96)}
+.sidebar__close{align-self:flex-end;background:var(--surface);border:1px solid var(--border);color:var(--text);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer;transition:background var(--transition),transform var(--transition);margin-bottom:12px;-webkit-tap-highlight-color:transparent}
+.sidebar__close:hover{background:var(--surface-hover);transform:scale(1.02)}
+.sidebar__header{display:flex;align-items:center;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.sidebar__header .logo{font-weight:700;font-size:1.3rem;letter-spacing:-.02em;color:var(--text)}
+.sidebar__header .controls{display:flex;gap:8px}
+.sidebar__header .theme-toggle,.sidebar__header .lang-toggle{background:var(--surface);border:1px solid var(--border);color:var(--text);height:38px;border-radius:50%;width:38px;display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;transition:background var(--transition),transform var(--transition),border-color var(--transition);flex-shrink:0;font-weight:600;padding:0;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.sidebar__header .theme-toggle:hover,.sidebar__header .lang-toggle:hover{background:var(--surface-hover);transform:scale(1.05)}
+.sidebar__header .lang-toggle{border-radius:20px;padding:0 14px;font-size:.8rem;gap:6px;width:auto}
+.sidebar__nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.sidebar__nav .nav-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:var(--radius-sm);color:var(--text-secondary);font-weight:500;font-size:.95rem;cursor:pointer;transition:background var(--transition),color var(--transition);border:none;background:transparent;width:100%;text-align:left;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.sidebar__nav .nav-item i{width:1.4em;font-size:1.1rem;color:var(--text-muted);transition:color var(--transition)}
+.sidebar__nav .nav-item:hover{background:rgba(255,255,255,.10);color:var(--text)}
+.sidebar__nav .nav-item:hover i{color:var(--accent)}
+.sidebar__nav .nav-item.active{background:rgba(255,255,255,.14);color:var(--text)}
+.sidebar__nav .nav-item.active i{color:var(--accent)}
+body.light .sidebar__nav .nav-item:hover{background:rgba(0,0,0,.06)}
+body.light .sidebar__nav .nav-item.active{background:rgba(0,0,0,.08)}
+.sidebar__footer{margin-top:auto;padding-top:20px;border-top:1px solid var(--border);font-size:.85rem;color:var(--text-secondary);text-align:center}
+.sidebar__footer a{color:var(--text);text-decoration:none;font-weight:500}
+.sidebar__footer a:hover{text-decoration:underline}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(20,20,20,.90);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:12px 28px;border-radius:12px;color:var(--text);font-size:.9rem;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.7);border:1px solid var(--border);opacity:0;visibility:hidden;transition:opacity .35s ease,transform .35s ease,visibility .35s;z-index:200;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.card-flip-wrap{perspective:1200px;min-height:200px;cursor:pointer;margin-bottom:20px;user-select:none;-webkit-tap-highlight-color:transparent}
+.card-flip-inner{position:relative;width:100%;min-height:200px;transition:transform .7s cubic-bezier(.23,1,.32,1);transform-style:preserve-3d}
+.card-flip-inner.flipped{transform:rotateY(180deg)}
+.card-flip-front,.card-flip-back{position:absolute;inset:0;width:100%;min-height:200px;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;text-align:center;background:var(--card-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--border);box-shadow:var(--shadow);transition:border-color var(--transition),box-shadow var(--transition),background var(--transition);user-select:none;-webkit-tap-highlight-color:transparent}
+.card-flip-front:hover,.card-flip-back:hover{border-color:rgba(255,255,255,.3);box-shadow:0 12px 48px rgba(0,0,0,.7)}
+body.light .card-flip-front:hover,body.light .card-flip-back:hover{border-color:rgba(0,0,0,.2);box-shadow:0 12px 48px rgba(0,0,0,.12)}
+.card-flip-back{transform:rotateY(180deg)}
+.flip-front-brand{font-size:2.4rem;font-weight:700;letter-spacing:-.03em;color:var(--text);margin-bottom:6px;line-height:1.1}
+.flip-front-sub{color:var(--text-secondary);font-size:.9rem;font-weight:400;margin-bottom:14px}
+.flip-front-icon{font-size:2.8rem;color:var(--accent);opacity:.5;margin-bottom:4px}
+.flip-back-icon{font-size:2.6rem;color:#26A5E4;margin-bottom:8px}
+.flip-back-title{font-size:1.25rem;font-weight:600;color:var(--text);margin-bottom:4px;letter-spacing:-.01em}
+.flip-back-text{color:var(--text-secondary);font-size:.95rem;line-height:1.6;max-width:420px;margin:4px auto 16px}
+.flip-back-text strong{color:var(--text);font-weight:600}
+.flip-back-btn{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.10);border:1px solid var(--border);color:var(--text);padding:10px 26px;border-radius:40px;font-weight:600;font-size:.9rem;text-decoration:none;transition:background var(--transition),transform var(--transition),border-color var(--transition);font-family:inherit;cursor:pointer;user-select:auto;-webkit-tap-highlight-color:transparent}
+.flip-back-btn:hover{background:rgba(255,255,255,.20);border-color:var(--accent);transform:scale(1.03)}
+.flip-back-btn i{font-size:1.1rem;color:#26A5E4}
+.calc-display-wrap{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 18px;margin-bottom:12px;text-align:right;min-height:70px;display:flex;flex-direction:column;justify-content:flex-end}
+.calc-expression{color:var(--text-muted);font-size:.9rem;min-height:1.4em;word-break:break-all}
+.calc-result{font-size:2rem;font-weight:600;color:var(--text);word-break:break-all;line-height:1.2}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.calc-grid button{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 0;font-size:1.1rem;font-weight:500;color:var(--text);cursor:pointer;transition:background var(--transition),transform var(--transition),border-color var(--transition);font-family:inherit;-webkit-tap-highlight-color:transparent}
+.calc-grid button:hover{background:var(--surface-hover);border-color:rgba(255,255,255,.3);transform:scale(1.02)}
+.calc-grid button:active{transform:scale(.94)}
+.calc-grid .operator{color:var(--accent)}
+.calc-grid .equals{background:var(--accent);color:#1a1a1a;border-color:var(--accent)}
+.calc-grid .equals:hover{background:var(--text);border-color:var(--text)}
+.calc-grid .clear{background:rgba(255,70,70,.15);color:#ff6b6b}
+.calc-grid .clear:hover{background:rgba(255,70,70,.25)}
+.calc-grid .zero{grid-column:span 2}
+.accordion{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;background:var(--card-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));box-shadow:var(--shadow);transition:border-color var(--transition),box-shadow var(--transition),background var(--transition)}
+.accordion:hover{border-color:rgba(255,255,255,.3);box-shadow:0 12px 48px rgba(0,0,0,.7)}
+body.light .accordion:hover{border-color:rgba(0,0,0,.2);box-shadow:0 12px 48px rgba(0,0,0,.12)}
+.accordion-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;cursor:pointer;user-select:none;transition:background var(--transition);gap:12px;-webkit-tap-highlight-color:transparent}
+.accordion-header:hover{background:rgba(255,255,255,.05)}
+body.light .accordion-header:hover{background:rgba(0,0,0,.02)}
+.accordion-header .title{font-weight:600;font-size:1.1rem;color:var(--text);display:flex;align-items:center;gap:10px}
+.accordion-header .title i{color:var(--accent);width:1.2em;text-align:center}
+.accordion-header .arrow{font-size:1.1rem;color:var(--text-muted);transition:transform var(--transition)}
+.accordion.open .accordion-header .arrow{transform:rotate(180deg)}
+.accordion-content{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.25,.46,.45,.94),padding .3s ease;padding:0 24px;background:rgba(255,255,255,.03);border-top:1px solid transparent}
+body.light .accordion-content{background:rgba(0,0,0,.01)}
+.accordion.open .accordion-content{max-height:3000px;padding:20px 24px 24px;border-top-color:var(--border)}
+.accordion-content .card__text{color:var(--text-secondary);line-height:1.65;font-size:.95rem}
+.accordion-content .card__text p{margin-bottom:10px}
+.accordion-content .card__text strong{color:var(--text)}
+.osint-tree{margin:10px 0 16px;padding-left:6px}
+.osint-tree ul{list-style:none;padding-left:20px}
+.osint-tree li{padding:4px 0;color:var(--text-secondary);font-size:.9rem;line-height:1.5;border-left:1px solid var(--border);padding-left:12px;margin-left:4px}
+.osint-tree li i{color:var(--accent);width:1.2em;margin-right:6px;font-size:.85rem}
+.osint-tree .root{border-left:none;padding-left:0;font-weight:500;color:var(--text)}
+.osint-tree .root i{color:#26A5E4}
+.osint-prices,.private-prices{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0 8px}
+.osint-prices .price-tag,.private-prices .price-tag{background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:30px;padding:6px 18px;font-size:.9rem;color:var(--text);display:inline-flex;align-items:center;gap:6px}
+.osint-prices .price-tag strong,.private-prices .price-tag strong{font-weight:600}
+body.light .osint-prices .price-tag,body.light .private-prices .price-tag{background:rgba(0,0,0,.05)}
+.private-list{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;list-style:none;padding:0;margin:8px 0 12px}
+.private-list li{color:var(--text-secondary);font-size:.9rem;line-height:1.6;padding-left:4px}
+.private-list li i{color:var(--accent);width:1.2em;margin-right:6px;font-size:.8rem}
+@media (max-width:540px){.private-list{grid-template-columns:1fr}}
+.bot-list{list-style:none;padding:0;margin:8px 0 12px}
+.bot-list li{padding:6px 0;border-bottom:1px solid var(--border);color:var(--text-secondary);font-size:.95rem;line-height:1.5}
+.bot-list li:last-child{border-bottom:none}
+.bot-list li strong{color:var(--text)}
+.bot-list .price-tag{display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:.85rem;margin-left:6px}
+body.light .bot-list .price-tag{background:rgba(0,0,0,.05)}
+.bot-sub{padding-left:20px;margin:4px 0 8px;color:var(--text-muted);font-size:.9rem}
+.bot-sub strong{color:var(--text)}
+.search-analysis{display:flex;flex-direction:column;gap:12px}
+.search-analysis .item{border-left:2px solid var(--accent);padding-left:16px}
+.search-analysis .item h4{font-weight:600;color:var(--text);font-size:1rem;margin-bottom:2px}
+.search-analysis .item p{color:var(--text-secondary);font-size:.95rem;line-height:1.5}
+.search-analysis .btn-privat{display:inline-block;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:12px 28px;border-radius:var(--radius-sm);font-weight:600;font-size:.95rem;text-decoration:none;transition:background var(--transition),transform var(--transition),border-color var(--transition);text-align:center;margin-top:6px;-webkit-tap-highlight-color:transparent}
+.search-analysis .btn-privat:hover{background:var(--surface-hover);border-color:var(--accent);transform:scale(1.02)}
+.search-analysis .btn-privat i{margin-right:8px;color:var(--accent)}
+.store-image{width:100%;border-radius:var(--radius-sm);margin-bottom:18px;border:1px solid var(--border);display:block}
+.post-section{--shift-x:0px;--shift-y:0px;translate:var(--shift-x) var(--shift-y);background:var(--card-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:20px;box-shadow:var(--shadow);transition:border-color var(--transition),box-shadow var(--transition),background var(--transition)}
+.post-section:hover{border-color:rgba(255,255,255,.3);box-shadow:0 12px 48px rgba(0,0,0,.7)}
+body.light .post-section:hover{border-color:rgba(0,0,0,.2);box-shadow:0 12px 48px rgba(0,0,0,.12)}
+.post-section img,.post-section video{width:100%;border-radius:var(--radius-sm);margin-bottom:18px;border:1px solid var(--border);display:block}
+.post-section h2{font-weight:600;font-size:1.3rem;margin-bottom:12px;color:var(--text);letter-spacing:-.01em}
+.post-section h3{font-weight:600;font-size:1.05rem;margin:16px 0 6px;color:var(--text)}
+.post-section p{color:var(--text-secondary);line-height:1.7;font-size:.95rem;margin-bottom:12px;white-space:pre-wrap}
+.post-section p:last-child{margin-bottom:0}
+.post-section .divider{border:0;border-top:1px solid var(--border);margin:24px 0}
+.post-section .note{font-style:italic;color:var(--text-muted);margin-top:8px}
+.faq-item{margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:14px}
+.faq-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.faq-item .question{font-weight:600;color:var(--text);font-size:1rem;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.faq-item .question i{color:var(--accent);font-size:.9rem}
+.faq-item .answer{color:var(--text-secondary);font-size:.95rem;line-height:1.5;padding-left:28px}
+.legal-footer{background:var(--card-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-top:20px;box-shadow:var(--shadow);color:var(--text-secondary);font-size:.85rem;line-height:1.6}
+.legal-footer p{margin-bottom:8px}
+.legal-footer p:last-child{margin-bottom:0}
+.legal-footer strong{color:var(--text)}
+.scroll-top-btn{position:fixed;bottom:30px;right:30px;z-index:70;background:var(--surface);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--border);color:var(--text);width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;box-shadow:var(--shadow);transition:opacity .3s ease,transform .3s ease,background var(--transition);opacity:0;transform:translateY(20px);pointer-events:none;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.scroll-top-btn.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+.scroll-top-btn:hover{background:var(--surface-hover)}
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s ease}
+.settings-overlay.open{opacity:1;visibility:visible}
+.settings-modal{background:var(--card-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--border);border-radius:var(--radius);max-width:480px;width:100%;padding:28px 24px;box-shadow:var(--shadow);max-height:90vh;overflow-y:auto;position:relative}
+.settings-modal h2{font-weight:600;font-size:1.3rem;color:var(--text);margin-bottom:18px;letter-spacing:-.01em}
+.settings-modal .close-settings{position:absolute;top:14px;right:18px;background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;transition:color var(--transition);-webkit-tap-highlight-color:transparent}
+.settings-modal .close-settings:hover{color:var(--text)}
+.settings-group{margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:14px}
+.settings-group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.settings-group label{display:flex;align-items:center;gap:12px;color:var(--text-secondary);font-size:.95rem;cursor:pointer;padding:4px 0}
+.settings-group label input[type="checkbox"]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.settings-group select{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;color:var(--text);font-size:.9rem;font-family:inherit;width:100%;margin-top:4px;outline:none;cursor:pointer}
+.settings-group select:focus{border-color:var(--accent)}
+.settings-group .hint{font-size:.8rem;color:var(--text-muted);margin-top:2px;padding-left:30px}
+body.no-card-animation .card{animation:none!important}
+body.no-card-animation .card-flip-wrap{animation:none!important}
+body.optimized .card,body.optimized .post-section,body.optimized .accordion,body.optimized .legal-footer,body.optimized .settings-modal{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--card-bg)!important}
+body.optimized .sidebar{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.font-serif{font-family:'Georgia',serif}
+body.font-monospace{font-family:'Courier New',monospace}
+body.font-inter{font-family:'Inter',-apple-system,system-ui,sans-serif}
+.rules-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s ease}
+.rules-overlay.open{opacity:1;visibility:visible}
+.rules-modal{background:var(--card-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--border);border-radius:var(--radius);max-width:580px;width:100%;padding:32px 28px;box-shadow:var(--shadow);max-height:90vh;overflow-y:auto}
+.rules-modal h2{font-weight:600;font-size:1.4rem;color:var(--text);margin-bottom:16px;letter-spacing:-.01em}
+.rules-modal p{color:var(--text-secondary);line-height:1.7;font-size:.95rem;margin-bottom:14px}
+.rules-modal .agree-btn{background:#2e7d32;border:none;color:#fff;font-weight:600;font-size:1rem;padding:14px 32px;border-radius:var(--radius-sm);cursor:pointer;transition:background .2s ease,transform .2s ease;width:100%;margin-top:8px;font-family:inherit;letter-spacing:.3px;-webkit-tap-highlight-color:transparent}
+.rules-modal .agree-btn:hover{background:#388e3c;transform:scale(1.02)}
+.rules-modal .agree-btn:active{transform:scale(.97)}
+.animate-on-scroll{opacity:0;transform:translateX(-40px);transition:opacity .7s cubic-bezier(.25,.46,.45,.94),transform .7s cubic-bezier(.25,.46,.45,.94)}
+.animate-on-scroll.visible{opacity:1;transform:translateX(0)}
+.animate-on-scroll:nth-child(even){transform:translateX(40px)}
+.animate-on-scroll.visible:nth-child(even){transform:translateX(0)}
+.admin-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.admin-tab{flex:1;min-width:90px;padding:12px 8px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-family:inherit;font-size:.85rem;transition:all .25s}
+.admin-tab:hover{background:var(--surface-hover)}
+.admin-tab.active{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.admin-form-group{margin-bottom:14px}
+.admin-form-group label{display:block;color:var(--text-secondary);font-size:.85rem;margin-bottom:6px;font-weight:500}
+.admin-form-group input[type=text],.admin-form-group input[type=password],.admin-form-group textarea{width:100%;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:.95rem;transition:border-color .25s}
+body.light .admin-form-group input[type=text],body.light .admin-form-group input[type=password],body.light .admin-form-group textarea{background:rgba(0,0,0,.04)}
+.admin-form-group input:focus,.admin-form-group textarea:focus{outline:none;border-color:var(--accent)}
+.admin-form-group textarea{min-height:90px;resize:vertical}
+.file-input-wrap{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,.06);border:1px dashed var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .25s,background .25s}
+body.light .file-input-wrap{background:rgba(0,0,0,.04)}
+.file-input-wrap:hover{border-color:var(--accent);background:rgba(255,255,255,.1)}
+.file-input-wrap input[type=file]{display:none}
+.file-input-wrap i{color:var(--accent);font-size:1.1rem}
+.file-input-wrap .file-name{color:var(--text-muted);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-admin{padding:11px 22px;background:var(--accent);color:var(--bg);border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-family:inherit;font-size:.9rem;transition:transform .2s,opacity .2s}
+.btn-admin:hover{transform:scale(1.02)}
+.btn-admin:active{transform:scale(.97)}
+.btn-admin.danger{background:#ff6b6b;color:#fff}
+.btn-admin.secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-admin.secondary:hover{background:var(--surface-hover)}
+.admin-item{display:flex;gap:14px;padding:14px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;align-items:center}
+body.light .admin-item{background:rgba(0,0,0,.03)}
+.admin-item .thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#000;border:1px solid var(--border)}
+.admin-item .info{flex:1;min-width:0}
+.admin-item .info .name{font-weight:600;color:var(--text);margin-bottom:3px;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-item .info .desc{color:var(--text-muted);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-item .actions{display:flex;gap:6px;flex-shrink:0}
+.admin-item .actions button{padding:6px 12px;font-size:.78rem;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;font-weight:500;transition:background .2s}
+.admin-item .actions button:hover{background:var(--surface-hover)}
+.admin-item .actions button.danger{color:#ff6b6b;border-color:rgba(255,107,107,.3)}
+.admin-item .actions button.danger:hover{background:rgba(255,107,107,.15)}
+.preview-box{margin-top:10px;padding:10px;background:rgba(255,255,255,.04);border-radius:var(--radius-sm);text-align:center}
+body.light .preview-box{background:rgba(0,0,0,.03)}
+.preview-box img,.preview-box video,.preview-box audio{max-width:100%;max-height:220px;border-radius:6px;display:block;margin:0 auto}
+.admin-empty{text-align:center;padding:30px 20px;color:var(--text-muted);font-size:.9rem}
+.admin-logout{display:flex;justify-content:flex-end;margin-bottom:12px}
+.custom-post{position:relative}
+.custom-post .post-media{width:100%;border-radius:var(--radius-sm);margin-bottom:18px;border:1px solid var(--border);display:block}
+.custom-service-card{background:var(--card-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px;display:flex;gap:14px;align-items:center;transition:border-color var(--transition),box-shadow var(--transition)}
+.custom-service-card:hover{border-color:rgba(255,255,255,.3);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+body.light .custom-service-card:hover{border-color:rgba(0,0,0,.2);box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.custom-service-card .svc-img{width:80px;height:80px;object-fit:cover;border-radius:10px;flex-shrink:0;border:1px solid var(--border);background:#000}
+.custom-service-card .svc-info{flex:1;min-width:0}
+.custom-service-card .svc-info .svc-name{font-weight:600;font-size:1rem;color:var(--text);margin-bottom:4px}
+.custom-service-card .svc-info .svc-desc{color:var(--text-secondary);font-size:.88rem;line-height:1.5;margin-bottom:6px}
+.custom-service-card .svc-info .svc-price{font-weight:600;color:var(--accent);font-size:.95rem;background:rgba(255,255,255,.08);padding:3px 14px;border-radius:20px;border:1px solid var(--border);display:inline-block}
+body.light .custom-service-card .svc-info .svc-price{background:rgba(0,0,0,.06)}
+.wp-status{font-size:.85rem;color:var(--text-muted);margin-top:8px;min-height:1.2em}
+.wp-status.active{color:var(--accent)}
+@media (max-width:540px){
+.post-section{padding:18px}.post-section h2{font-size:1.1rem}.post-section h3{font-size:.95rem}
+.settings-modal{padding:20px 16px}
+.scroll-top-btn{width:44px;height:44px;font-size:1.2rem;bottom:20px;right:20px}
+body{padding:0 14px 30px}
+.card{padding:18px}
+.floating-menu-btn{top:12px;right:12px;width:44px;height:44px;font-size:1.2rem}
+.price-sheet .price-row{padding:10px 0}
+.price-sheet .service{font-size:.88rem}
+.price-sheet .cost{font-size:.85rem;padding:3px 12px}
+.contact-grid .label{min-width:60px;font-size:.8rem}
+.sidebar{padding:24px 18px 30px;width:280px}
+.instruction-list li{font-size:.88rem}
+.step .desc{font-size:.88rem}
+.card-flip-wrap,.card-flip-inner{min-height:180px}
+.card-flip-front,.card-flip-back{min-height:180px;padding:20px 16px}
+.flip-front-brand{font-size:1.8rem}
+.flip-front-icon{font-size:2rem}
+.flip-back-title{font-size:1.05rem}
+.flip-back-text{font-size:.85rem}
+.flip-back-btn{padding:8px 20px;font-size:.8rem}
+.calc-grid{gap:6px}.calc-grid button{padding:12px 0;font-size:1rem}
+.calc-display-wrap{min-height:60px;padding:10px 14px}
+.calc-result{font-size:1.6rem}
+.osint-prices,.private-prices{flex-direction:column;align-items:flex-start}
+.accordion-header{padding:14px 16px}
+.accordion-content{padding:0 16px}
+.accordion.open .accordion-content{padding:16px 16px 20px}
+.bot-list li{font-size:.88rem;padding:5px 0}
+.search-analysis .item{padding-left:12px}
+.sidebar__header .logo{font-size:1.1rem}
+.faq-item .question{font-size:.95rem}
+.faq-item .answer{font-size:.9rem;padding-left:20px}
+}
+@media (max-width:380px){
+.contact-grid .row{flex-direction:column;gap:2px}
+.contact-grid .label{min-width:auto}
+.card-flip-wrap,.card-flip-inner{min-height:160px}
+.card-flip-front,.card-flip-back{min-height:160px;padding:16px 12px}
+.flip-front-brand{font-size:1.5rem}
+.flip-back-title{font-size:.95rem}
+}
+</style>
+</head>
+<body>
+<video id="bgVideo" autoplay muted loop playsinline preload="auto"><source src="media/myby.mp4" type="video/mp4"></video>
+<img id="bgImage" src="imoby/obo.png" alt="" aria-hidden="true">
+<audio id="bgAudio" loop preload="none"></audio>
+
+<button class="floating-menu-btn" id="menuToggle" aria-label="Открыть меню"><i class="fas fa-bars"></i></button>
+<button class="scroll-top-btn" id="scrollTopBtn" aria-label="Наверх"><i class="fas fa-arrow-up"></i></button>
+
+<main class="main">
+  <div class="page active" id="page-home">
+    <div class="card animate-on-scroll" style="border-color:rgba(255,255,255,.2);padding:32px 28px">
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+        <div style="font-size:3rem;color:var(--accent);margin-bottom:8px"><i class="fas fa-database"></i></div>
+        <h1 style="font-size:1.8rem;font-weight:700;letter-spacing:-.02em;margin-bottom:6px;color:var(--text)">rootsql</h1>
+        <p style="color:var(--text-secondary);font-size:1.05rem;max-width:460px;margin:0 auto 14px">Услуги по сбору данных, OSINT, автоматизация и не только</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+          <a href="#store" onclick="navigateTo('store');return false" style="background:var(--surface);border:1px solid var(--border);padding:10px 28px;border-radius:40px;color:var(--text);font-weight:600;text-decoration:none"><i class="fas fa-store"></i> Перейти в магазин</a>
+          <a href="#order" onclick="navigateTo('order');return false" style="background:var(--surface);border:1px solid var(--border);padding:10px 28px;border-radius:40px;color:var(--text);font-weight:600;text-decoration:none"><i class="fas fa-paper-plane"></i> Заказать</a>
+        </div>
+      </div>
+    </div>
+    <div class="card-flip-wrap animate-on-scroll" id="flipCardWrap">
+      <div class="card-flip-inner" id="flipCardInner">
+        <div class="card-flip-front">
+          <div class="flip-front-icon"><i class="fas fa-hand-peace"></i></div>
+          <div class="flip-front-brand">rootsql</div>
+          <div class="flip-front-sub">Добро пожаловать</div>
+        </div>
+        <div class="card-flip-back">
+          <div class="flip-back-icon"><i class="fab fa-telegram"></i></div>
+          <div class="flip-back-title">Бесплатные инструменты</div>
+          <div class="flip-back-text">Заходи в наш <strong>Telegram</strong>, где множество <strong>бесплатных инструментов</strong> для любых задач.</div>
+          <a href="https://t.me/date_bad" target="_blank" class="flip-back-btn"><i class="fab fa-telegram"></i> Перейти в канал</a>
+        </div>
+      </div>
+    </div>
+    <div class="card animate-on-scroll">
+      <div class="card__title"><i class="fas fa-star"></i> Почему мы</div>
+      <div class="card__text" style="display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;margin-top:4px">
+        <div style="display:flex;align-items:center;gap:10px"><i class="fas fa-shield-alt" style="color:var(--accent);font-size:1.2rem;width:1.8rem"></i><span style="font-weight:500">Анонимность</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><i class="fas fa-bolt" style="color:var(--accent);font-size:1.2rem;width:1.8rem"></i><span style="font-weight:500">Быстрое выполнение</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><i class="fas fa-lock" style="color:var(--accent);font-size:1.2rem;width:1.8rem"></i><span style="font-weight:500">Приватность данных</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><i class="fas fa-headset" style="color:var(--accent);font-size:1.2rem;width:1.8rem"></i><span style="font-weight:500">Поддержка 24/7</span></div>
+      </div>
+    </div>
+    <div class="card animate-on-scroll">
+      <div class="card__title"><i class="fas fa-th-list"></i> Основные услуги</div>
+      <div class="card__text" style="display:grid;grid-template-columns:1fr 1fr;gap:12px 20px">
+        <div>Вирт. номера</div><div>Боты / софты</div>
+        <div>Сбор данных</div><div>OSINT-архив</div>
+        <div>Приват БД</div><div>Боты для сноса</div>
+      </div>
+      <div style="margin-top:14px;text-align:right">
+        <a href="#store" onclick="navigateTo('store');return false" style="color:var(--accent);text-decoration:none;font-weight:500;border-bottom:1px solid var(--accent)">Полный прайс →</a>
+      </div>
+    </div>
+    <div class="card animate-on-scroll">
+      <div class="card__title"><i class="fas fa-circle-info"></i> Инструкция</div>
+      <div class="card__text">
+        <ul class="instruction-list">
+          <li><strong>Прайс на сайте</strong> — нажми на три точки в углу, затем выбери <strong>«магазин»</strong>.</li>
+          <li><strong>Быстрый переход в личку</strong> — скопируй мой юзернейм <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> или нажми на него, после чего сможешь написать в Telegram.</li>
+          <li><strong>Чтобы избежать недопонимания</strong> — пиши конкретно, что тебя интересует. Иначе ответа не будет.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card animate-on-scroll">
+      <div class="card__title"><i class="fas fa-route"></i> Как мы работаем</div>
+      <div class="steps">
+        <div class="step"><span class="num">1</span><span class="desc">Принимаем вашу заявку в личном чате в Telegram</span></div>
+        <div class="step"><span class="num">2</span><span class="desc">Вы оплачиваете</span></div>
+        <div class="step"><span class="num">3</span><span class="desc">Наша работа начинается после оплаты</span></div>
+        <div class="step"><span class="num">4</span><span class="desc">Выдаём ваш заказ в личных сообщениях в Telegram <strong>(в том же чате, где была оплата)</strong></span></div>
+        <div class="step" style="border-top:1px solid var(--border);padding-top:12px;margin-top:6px">
+          <span class="num" style="background:transparent;border-color:transparent">!</span>
+          <span class="desc" style="color:var(--text-muted);font-size:.9rem">Если отвечают не сразу — значит заняты, попробуйте продублировать сообщение.</span>
+        </div>
+      </div>
+    </div>
+    <div class="card animate-on-scroll">
+      <div class="card__title"><i class="fas fa-search"></i> Поиск / Анализ — в чем разница?</div>
+      <div class="card__text search-analysis">
+        <div class="item">
+          <h4><i class="fas fa-chart-line" style="color:var(--accent);margin-right:6px"></i> Анализ</h4>
+          <p>Анализ в расследовании — это систематический процесс обработки и интерпретации информации. В расследованиях анализ — метод проверки объективности информации.</p>
+        </div>
+        <div class="item">
+          <h4><i class="fas fa-compass" style="color:var(--accent);margin-right:6px"></i> Поиск</h4>
+          <p>Поиск — это целенаправленный процесс действий, направленный на обнаружение чего-либо утерянного, нового или нужного. В расследованиях поиск — это обнаружение новых зацепок из исходных данных.</p>
+        </div>
+        <a href="#store" onclick="navigateTo('store');return false" class="btn-privat"><i class="fas fa-lock"></i> КУПИТЬ ПРИВАТ ГДЕ БОЛЬШЕ ПРО ОСИНТ</a>
+      </div>
+    </div>
+    <div class="card animate-on-scroll">
+      <div class="card__title"><i class="fas fa-address-book"></i> Контакты</div>
+      <div class="card__text">
+        <div class="contact-grid">
+          <div class="row"><span class="label">Канал</span><span class="value"><span class="copy-trigger" data-copy="@date_bad">@date_bad</span></span></div>
+          <div class="row"><span class="label">Личка</span><span class="value"><span class="copy-trigger" data-copy="@rootsql">@rootsql</span></span></div>
+          <div class="row"><span class="label">Прайс</span><span class="value"><span class="copy-trigger" data-copy="@pass_as">@pass_as</span></span></div>
+          <div class="row" style="margin-top:4px"><span class="label">Бот</span><span class="value"><span class="copy-trigger" data-copy="@SosinafrootBot">@SosinafrootBot</span> <span style="color:var(--text-muted);font-size:.8rem;font-weight:400;margin-left:6px">(если спам-блок)</span></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dynamicPostsContainer"></div>
+
+    <div class="post-section animate-on-scroll">
+      <img src="media/my.jpg" alt="OSINT инструменты" />
+      <h2>Инвентарь и дисциплина в OSINT</h2>
+      <p>OSINT-исследователь похож на хирурга — успех операции зависит не только от знаний, но и от того, насколько быстро и уверенно вы достаёте нужный инструмент. В мире открытых источников десятки, а то и сотни инструментов — от поисковиков и чекеров утечек до инструментов для анализа доменов и обратного поиска изображений. Без продуманной системы хранения и быстрого доступа вы рискуете тратить половину времени на поиски нужной ссылки или скрипта.</p>
+      <p>Главная проблема новичка — инструменты разбросаны по браузерным закладкам, заметкам, чатам и Excel-таблицам. В результате — потеря контекста, замедление работы и упущенные возможности.</p>
+      <h3>Почему дисциплина в инструментах — это навык №1</h3>
+      <p>Многие начинающие OSINT-специалисты ошибочно полагают, что главное — выучить как можно больше инструментов. На практике важнее другое:</p>
+      <ul>
+        <li><span class="highlight">Скорость реакции.</span> В расследовании каждая минута на счету. Если вам нужно 30 секунд, чтобы найти нужный инструмент, а не 5 — за день вы теряете часы.</li>
+        <li><span class="highlight">Снижение когнитивной нагрузки.</span> Когда все инструменты разложены по полочкам, мозг не тратит энергию на поиск — вы сосредоточены на самом анализе.</li>
+        <li><span class="highlight">Воспроизводимость.</span> Чёткая система позволяет вернуться к расследованию через неделю и сразу понять, что вы делали и какие инструменты использовали.</li>
+      </ul>
+      <h3>Где лучше всего создавать инвентарь OSINT-инструментов?</h3>
+      <p><span class="accent-text">Start.me</span> — это визуальная стартовая страница, которую OSINT-сообщество использует массово. Тысячи исследователей по всему миру доверяют этой платформе.</p>
+      <p><span class="accent-text">Notion</span> — для тех, кто любит структуру. Notion — это универсальное рабочее пространство для заметок, баз данных и совместной работы.</p>
+      <p><span class="accent-text">Obsidian</span> — для офлайн-энтузиастов, сам использую Obsidian — это приватная база знаний на Markdown с мощными связями между заметками.</p>
+      <hr class="divider" />
+      <p class="note">ПРОДОЛЖЕНИЯ И ВСЕ ДРУГИЕ ИНСТРУМЕНТЫ В АРХИВЕ</p>
+    </div>
+
+    <div class="post-section animate-on-scroll">
+      <h2>Я не уважаю доксеров и, в принципе, КМ. Почему?</h2>
+      <p>Причин много, но расскажу некоторые из них:</p>
+      <h3>Что касается доксеров:</h3>
+      <ul>
+        <li>они лезут в личную жизнь людей</li>
+        <li>сливают или продают данные</li>
+        <li>угрожают, причём часто безосновательно и по-детски</li>
+      </ul>
+      <h3>Почему я не уважаю "КМ"?</h3>
+      <p>Причин тоже куча, но перечислю основные</p>
+      <ul>
+        <li><span class="highlight">Главная причина — попытка самоутвердиться.</span> Как правило, разборки доксеров в интернете выглядят так: какой-нибудь участник "КМ" пытается доказать свою крутость.</li>
+        <li><span class="highlight">Безграмотность и неадекватность в общении.</span> Часто замечаю, что при любом словесном конфликте такие "специалисты" сливают чьи-то данные и зовут оппонента в "КФ".</li>
+        <li><span class="highlight">Смешные эдиты с "валидацией".</span> Это когда один доксер находит данные другого и требует извинений.</li>
+      </ul>
+      <h3>Мой итог:</h3>
+      <p>КМ и доксеры — это сборище детей, которые пытаются доказать свою крутость, показать, насколько они крутые, не имея при этом ничего особенного и не сделав ничего значительного.</p>
+      <p class="note">В НАШЕМ АРХИВЕ БОЛЬШЕ ПРО OSINT</p>
+    </div>
+
+    <div class="post-section animate-on-scroll">
+      <h2>Почему OSINT, а не доксинг?</h2>
+      <p>Многие приходят в OSINT ради "найти любого человека по номеру телефона" Но настоящая ценность OSINT не в этом</p>
+      <p>Доксинг это публикация личной информации с целью навредить. Это незаконно, аморально и, что важнее, бесполезно для развития.</p>
+      <p>OSINT это разведка по открытым источникам с соблюдением закона. Это про анализ, а не про сбор.</p>
+      <p>Переходя на OSINT, ты выбираешь профессию, а не хобби для "пробива".</p>
+      <p class="note">А ЛУЧШИЙ МАНУАЛЫ И ОБУЧЕНИЯ В НАШЕЙ ЗАКРЫТОЙ ГРУППЕ</p>
+    </div>
+
+    <div class="legal-footer animate-on-scroll">
+      <p><strong>Данный сайт не более чем переходник.</strong> Сайт не предоставляет инструменты или же не продаёт запрещённое. Всё в рамках закона РФ и других стран.</p>
+      <p>Администратор не несёт ответственности за действия пользователей после продажи того или иного инструмента. Администратор не продаёт ничего незаконного. Все сделки осуществляются на добровольной основе. Пользователь самостоятельно несёт ответственность за использование приобретённых инструментов.</p>
+      <p>Администратор не виновен и не отвечает за действия других пользователей после продажи. Любые инструменты предоставляются «как есть», без гарантий.</p>
+    </div>
+  </div>
+
+  <div class="page" id="page-store">
+    <div class="card" style="border-color:var(--accent)">
+      <img src="media/my.jpg" alt="rootsql" class="store-image" onerror="this.style.display='none'" />
+      <div class="card__title" style="font-size:1.3rem"><i class="fas fa-tag"></i> PRICE SHEET</div>
+      <div class="price-sheet">
+        <div class="price-row"><span class="service"><i class="fas fa-phone"></i> Виртуальные номера</span><span class="cost dm">лс</span></div>
+        <div class="price-row"><span class="service"><i class="fas fa-code"></i> Бот / сайты / софты</span><span class="cost dm">лс</span></div>
+        <div class="price-row"><span class="service"><i class="fas fa-bullhorn"></i> Реклама</span><span class="cost dm">лс</span></div>
+        <div class="price-row"><span class="service"><i class="fas fa-database"></i> Сбор данных</span><span class="cost">от 300 руб / 4$</span></div>
+        <div class="price-row"><span class="service"><i class="fas fa-shield"></i> Гарант</span><span class="cost">5% от суммы</span></div>
+        <div class="price-row"><span class="service"><i class="fas fa-folder-open"></i> Закрытый OSINT-архив</span><span class="cost">от 200 руб</span></div>
+        <div class="price-row"><span class="service"><i class="fas fa-folder"></i> Архив 2 (приват)</span><span class="cost">от 450 руб</span></div>
+        <div class="price-row"><span class="service"><i class="fas fa-robot"></i> Боты / софты для сноса</span><span class="cost">от 500 руб</span></div>
+        <div class="price-row"><span class="service"><i class="fas fa-lock"></i> Приват база данных</span><span class="cost">300 руб / 4$</span></div>
+      </div>
+      <div id="customServicesContainer"></div>
+      <div class="payment-methods">
+        <span class="label">Принимаю</span>
+        <div class="tags">
+          <span class="tag">Карта РФ</span>
+          <span class="tag">СБП по номеру телефона</span>
+          <span class="tag">Крипта бот</span>
+          <span class="tag">Любой крипто-кошелёк</span>
+        </div>
+      </div>
+    </div>
+    <div class="accordion" id="accordionOsint">
+      <div class="accordion-header" data-target="accordionOsint">
+        <span class="title"><i class="fas fa-archive"></i> Закрытый OSINT-архив</span>
+        <span class="arrow"><i class="fas fa-chevron-down"></i></span>
+      </div>
+      <div class="accordion-content">
+        <div class="card__text">
+          <p>Всё, что нужно для разведки по открытым источникам, — уже собрано и разложено по полочкам. Никакого хаоса. Только структура, только польза.</p>
+          <div class="osint-tree">
+            <ul>
+              <li class="root"><i class="fas fa-folder-open"></i> ОСНОВНОЕ<ul><li><i class="fas fa-file-alt"></i> Правила</li><li><i class="fas fa-compass"></i> Навигация</li><li><i class="fas fa-comments"></i> Чат</li></ul></li>
+              <li class="root"><i class="fas fa-shield-alt"></i> БЕЗОПАСНОСТЬ И ЗАКОН<ul><li><i class="fas fa-balance-scale"></i> ЭТИКА И ЗАКОНЫ</li><li><i class="fas fa-user-secret"></i> OPSEC и Анонимность</li><li><i class="fas fa-camera"></i> EVIDENCE</li></ul></li>
+              <li class="root"><i class="fas fa-tools"></i> ИНСТРУМЕНТЫ<ul><li><i class="fas fa-globe"></i> WEB OSINT</li><li><i class="fas fa-search"></i> Dork</li><li><i class="fas fa-user-tag"></i> USERNAME TOOL OSINT</li><li><i class="fas fa-robot"></i> BOT TOOL OSINT</li><li><i class="fas fa-terminal"></i> TERMINAL OSINT TOOL</li><li><i class="fab fa-github"></i> GITHUB TOOL OSINT</li><li><i class="fas fa-cogs"></i> OSINT AUTOMATION</li><li><i class="fas fa-exchange-alt"></i> TRANSFORMERS MALTEGO</li></ul></li>
+              <li class="root"><i class="fas fa-database"></i> ДАННЫЕ И ИСТОЧНИКИ<ul><li><i class="fas fa-bug"></i> BREACHES и утечки</li><li><i class="fas fa-coins"></i> FINANCE OSINT</li><li><i class="fas fa-map-marked-alt"></i> GEOINT</li><li><i class="fas fa-user-friends"></i> HUMINT</li><li><i class="fas fa-image"></i> MEDIA OSINT</li><li><i class="fas fa-moon"></i> DARKWEB & TOR</li><li><i class="fas fa-brain"></i> AI & DEEPFAKE</li></ul></li>
+              <li class="root"><i class="fas fa-graduation-cap"></i> ОБУЧЕНИЕ И ПРАКТИКА<ul><li><i class="fas fa-chalkboard-teacher"></i> ЛЕКЦИЯ</li><li><i class="fas fa-calendar-alt"></i> EVENTS</li><li><i class="fas fa-folder"></i> KEIS</li><li><i class="fas fa-eye"></i> КРИТИКА OSINT 2026</li></ul></li>
+              <li class="root"><i class="fas fa-plus-circle"></i> ДОПОЛНИТЕЛЬНО<ul><li><i class="fas fa-sync-alt"></i> Updates</li><li><i class="fas fa-book"></i> Книги по OSINT</li><li><i class="fas fa-bullhorn"></i> РЕКЛАМА</li></ul></li>
+            </ul>
+          </div>
+          <p>ДЛЯ КОГО: — Новичков, кто хочет быстро войти в тему<br>— Профи, уставших собирать ссылки по закладкам</p>
+          <div class="osint-prices">
+            <span class="price-tag">На неделю <strong>200 ₽</strong></span>
+            <span class="price-tag">На месяц <strong>450 ₽</strong></span>
+            <span class="price-tag">Навсегда <strong>600 ₽</strong></span>
+          </div>
+          <p style="margin-top:6px"><strong>КАК ПОЛУЧИТЬ:</strong> Купить можно в лс: <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> <span style="display:block;margin-top:2px">Принимаю: РУБ / USDT</span> <span style="display:block;margin-top:6px;font-style:italic;color:var(--text-muted)">Стань частью закрытого OSINT-сообщества.</span></p>
+        </div>
+      </div>
+    </div>
+    <div class="accordion" id="accordionPrivate">
+      <div class="accordion-header" data-target="accordionPrivate">
+        <span class="title"><i class="fas fa-lock"></i> Продам вход в приват</span>
+        <span class="arrow"><i class="fas fa-chevron-down"></i></span>
+      </div>
+      <div class="accordion-content">
+        <div class="card__text">
+          <p>• тем: в данный момент 76+</p>
+          <p>В привате имеется :</p>
+          <ul class="private-list">
+            <li><i class="fas fa-eye"></i> znozor</li><li><i class="fas fa-cube"></i> софты</li><li><i class="fas fa-tools"></i> утилиты</li><li><i class="fas fa-code"></i> скрипты</li><li><i class="fas fa-biohazard"></i> Вирусы</li><li><i class="fas fa-skull"></i> ратники</li><li><i class="fas fa-search"></i> osint</li><li><i class="fas fa-graduation-cap"></i> Обучение osint</li><li><i class="fas fa-screwdriver"></i> инструменты osint</li><li><i class="fas fa-database"></i> База данных</li><li><i class="fas fa-paint-brush"></i> ава/дизайн</li><li><i class="fas fa-laptop-code"></i> программы</li><li><i class="fab fa-telegram"></i> тг моды</li><li><i class="fas fa-mask"></i> алайт молшен</li><li><i class="fas fa-file-alt"></i> документы</li><li><i class="fab fa-python"></i> python курс</li><li><i class="fas fa-terminal"></i> python программы</li><li><i class="fas fa-robot"></i> бот нет</li><li><i class="fas fa-globe"></i> Сайты</li><li><i class="fas fa-comment-dots"></i> Боты</li><li><i class="fas fa-mobile-alt"></i> тг клиенты</li><li><i class="fas fa-credit-card"></i> банк карты</li><li><i class="fas fa-shield-alt"></i> впны</li><li><i class="fas fa-book"></i> туторы</li><li><i class="fas fa-exclamation-triangle"></i> ошибки термукс</li><li><i class="fas fa-key"></i> сессий</li><li><i class="fas fa-envelope"></i> почты</li><li><i class="fas fa-file-pdf"></i> мануалы</li><li><i class="fas fa-bomb"></i> бомберы</li><li><i class="fas fa-network-wired"></i> dos атаки</li><li><i class="fas fa-virus"></i> Вирусы / вирусалогия</li><li><i class="fas fa-project-diagram"></i> проекси</li><li><i class="fas fa-gamepad"></i> Игры</li><li><i class="fab fa-python"></i> модуль python</li><li><i class="fas fa-gamepad"></i> Читы для игр</li>
+          </ul>
+          <p style="margin-top:8px">Больше информации можно получить в лс</p>
+          <div class="private-prices">
+            <span class="price-tag"><strong>450 ₽</strong> <span style="color:var(--text-muted)">— один человек</span></span>
+            <span class="price-tag"><strong>700 ₽</strong> <span style="color:var(--text-muted)">— для двоих</span></span>
+          </div>
+          <p style="margin-top:8px">Принимаю оплату: в $ / ₽<br><strong>Писать:</strong><br> • <span class="copy-trigger" data-copy="@rootsql">@rootsql</span> — продавец<br> • <span class="copy-trigger" data-copy="@SosinafrootBot">@SosinafrootBot</span> — спам блок</p>
+        </div>
+      </div>
+    </div>
+    <div class="accordion" id="accordionBots">
+      <div class="accordion-header" data-target="accordionBots">
+        <span class="title"><i class="fas fa-robot"></i> Боты — сносоры</span>
+        <span class="arrow"><i class="fas fa-chevron-down"></i></span>
+      </div>
+      <div class="accordion-content">
+        <div class="card__text">
+          <p>— боты без сессий: <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:.85rem">1к руб</span></p>
+          <p>— боты с сессиями: <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:.85rem">2-3к руб</span></p>
+          <p>— софты без сессий: <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:.85rem">1к руб</span></p>
+          <p>— софты с сессиями: <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:.85rem">2-3к руб</span></p>
+          <div class="bot-sub"><strong>• сессия</strong> — это аккаунты в телеграме, которые автоматически будут отправлять жалобу на другой аккаунт. По умолчанию я добавляю 50 сессий, если нужно больше — доплачивать: <strong>1 сессия = 30 руб</strong></div>
+          <p style="margin-top:12px">— бот нет: <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:.85rem">3к руб</span></p>
+          <p>— софты в виде бот нет: <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:.85rem">3к руб</span></p>
+          <div class="bot-sub"><strong>• бот нет</strong> — это чужие заражённые аккаунты в телеграме. Суть та же, что и с сессиями, но тут чутка по-другому.</div>
+          <p style="margin-top:12px">— боты для скама: <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:.85rem">700 руб</span></p>
+          <p>— софты для троллинга: <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:.85rem">500 руб</span></p>
+          <p>— боты для бизнеса: <span class="price-tag" style="display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:20px;padding:2px 14px;font-weight:600;color:var(--text);font-size:.85rem">от 1к руб</span></p>
+          <div class="bot-sub"><strong>• боты для скама</strong> — визуальный бот, который ты сможешь продавать другим людям со своими правилами и ценами.<br><strong>• софты для троллинга</strong> — тоже визуальный, но более устрашающе придуман для шуток.<br><strong>• боты для бизнеса</strong> — боты под твой вкус и выбор.</div>
+          <p style="margin-top:14px">— другое</p>
+          <ul class="bot-list" style="list-style:none;padding-left:0">
+            <li><strong>• дополнить функционал под свой вкус</strong></li>
+            <li><strong>• поменять дизайн</strong></li>
+            <li><strong>• заменить старый или добавить новый</strong></li>
+            <li><strong>• изменить софт или удалить не нужные функции</strong></li>
+          </ul>
+          <p style="margin-top:8px;color:var(--text-muted)">Все описания выше выделены жирным для наглядности.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="border-color:var(--accent)">
+      <div class="card__title" style="font-size:1.2rem"><i class="fas fa-calculator"></i> Калькулятор</div>
+      <div class="card__text">
+        <div class="calc-display-wrap">
+          <div class="calc-expression" id="calcExpression"></div>
+          <div class="calc-result" id="calcResult">0</div>
+        </div>
+        <div class="calc-grid" id="calcGrid">
+          <button class="clear" data-action="clear">C</button>
+          <button class="operator" data-action="operator" data-value="%">%</button>
+          <button class="operator" data-action="operator" data-value="/">÷</button>
+          <button class="operator" data-action="operator" data-value="*">×</button>
+          <button data-action="digit" data-value="7">7</button>
+          <button data-action="digit" data-value="8">8</button>
+          <button data-action="digit" data-value="9">9</button>
+          <button class="operator" data-action="operator" data-value="-">−</button>
+          <button data-action="digit" data-value="4">4</button>
+          <button data-action="digit" data-value="5">5</button>
+          <button data-action="digit" data-value="6">6</button>
+          <button class="operator" data-action="operator" data-value="+">+</button>
+          <button data-action="digit" data-value="1">1</button>
+          <button data-action="digit" data-value="2">2</button>
+          <button data-action="digit" data-value="3">3</button>
+          <button class="equals" data-action="equals">=</button>
+          <button class="zero" data-action="digit" data-value="0">0</button>
+          <button data-action="digit" data-value=".">.</button>
+          <button class="operator" data-action="backspace"><i class="fas fa-delete-left"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-order">
+    <div class="card" style="border-color:var(--accent)">
+      <div class="card__title" style="font-size:1.2rem"><i class="fas fa-paper-plane"></i> Быстрый заказ</div>
+      <div class="card__text">
+        <p style="margin-bottom:16px">Выберите услугу и напишите комментарий — мы свяжемся с вами в Telegram.</p>
+        <form id="orderForm">
+          <div class="form-group">
+            <label for="serviceSelect">Услуга</label>
+            <select id="serviceSelect" required>
+              <option value="">выберите</option>
+              <option>Виртуальные номера</option>
+              <option>Бот / сайты / софты</option>
+              <option>Реклама</option>
+              <option>Сбор данных</option>
+              <option>Гарант</option>
+              <option>OSINT архив</option>
+              <option>Архив 2 (приват)</option>
+              <option>Боты / софты для сноса</option>
+              <option>Приват база данных</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="comment">Комментарий (дополнительные пожелания)</label>
+            <textarea id="comment" placeholder="Опишите, что именно нужно..."></textarea>
+          </div>
+          <button type="submit" class="btn-submit"><i class="fab fa-telegram" style="margin-right:8px"></i> Отправить заявку</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-faq">
+    <div class="card" style="border-color:var(--accent)">
+      <div class="card__title" style="font-size:1.3rem"><i class="fas fa-question-circle"></i> Частые вопросы</div>
+      <div class="card__text">
+        <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Делаю ли я бесплатно?</div><div class="answer">Нет</div></div>
+        <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Принимаю ли я звёзды?</div><div class="answer">Нет</div></div>
+        <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Обмен может сделаем?</div><div class="answer">Нет, принимаю только ₽ / $</div></div>
+        <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> На сколько быстро будет работа выполнена?</div><div class="answer">Зависит от очереди, но в среднем по 30 минут</div></div>
+        <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Можно в архив / приват бесплатно?</div><div class="answer">Возможно попасть, можно узнать в лс</div></div>
+        <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Отвечаю ли я на вопросы для видео?</div><div class="answer">Нет</div></div>
+        <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Ты боишься докса?</div><div class="answer">Нет</div></div>
+        <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Сколько стоит то или иное?</div><div class="answer">Зайди в раздел магазин, если видишь значок лс пиши, объясню и расскажу</div></div>
+        <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Сколько мне лет?</div><div class="answer">Мне 9.5</div></div>
+        <div class="faq-item"><div class="question"><i class="fas fa-angle-right"></i> Я пацан?</div><div class="answer">Нет, я старая бабушка</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-admin">
+    <div class="card" id="adminLoading" style="border-color:var(--accent)">
+      <div class="card__title"><i class="fas fa-spinner"></i> Проверка доступа...</div>
+      <div class="card__text" style="padding:20px 0;text-align:center;color:var(--text-muted)">Пожалуйста, подождите</div>
+    </div>
+
+    <div class="card" id="adminLoginBox" style="border-color:var(--accent);display:none">
+      <div class="card__title" style="font-size:1.2rem"><i class="fas fa-user-shield"></i> Вход в админ-панель</div>
+      <div class="card__text">
+        <div class="admin-form-group">
+          <label for="adminPasswordInput">Пароль</label>
+          <input type="password" id="adminPasswordInput" placeholder="Введите пароль..." autocomplete="off" />
+        </div>
+        <button class="btn-admin" id="adminLoginBtn" style="width:100%">Войти</button>
+        <p id="adminLoginError" style="color:#ff6b6b;margin-top:10px;font-size:.9rem;display:none"></p>
+      </div>
+    </div>
+
+    <div id="adminContentBox" style="display:none">
+      <div class="admin-logout">
+        <button class="btn-admin secondary" id="adminLogoutBtn"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="posts"><i class="fas fa-newspaper"></i> Посты</button>
+        <button class="admin-tab" data-tab="services"><i class="fas fa-store"></i> Магазин</button>
+        <button class="admin-tab" data-tab="wallpapers"><i class="fas fa-image"></i> Обои</button>
+      </div>
+
+      <div class="admin-tab-content" id="adminTabPosts">
+        <div class="card" style="border-color:var(--accent)">
+          <div class="card__title"><i class="fas fa-plus-circle"></i> <span id="postFormTitle">Новый пост</span></div>
+          <div class="card__text">
+            <div class="admin-form-group">
+              <label>Картинка / видео</label>
+              <label class="file-input-wrap" for="postMediaInput">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span class="file-name" id="postMediaName">Выберите файл</span>
+                <input type="file" id="postMediaInput" accept="image/*,video/*" />
+              </label>
+            </div>
+            <div class="preview-box" id="postMediaPreview" style="display:none"></div>
+            <div class="admin-form-group"><label for="postTitleInput">Заголовок</label><input type="text" id="postTitleInput" maxlength="120" /></div>
+            <div class="admin-form-group"><label for="postDescInput">Описание</label><textarea id="postDescInput"></textarea></div>
+            <button class="btn-admin" id="postSaveBtn" style="width:100%"><i class="fas fa-save"></i> <span id="postSaveBtnText">Добавить пост</span></button>
+            <button class="btn-admin secondary" id="postCancelEditBtn" style="width:100%;margin-top:8px;display:none">Отмена</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__title"><i class="fas fa-list"></i> Существующие посты</div>
+          <div id="postsAdminList"></div>
+        </div>
+      </div>
+
+      <div class="admin-tab-content" id="adminTabServices" style="display:none">
+        <div class="card" style="border-color:var(--accent)">
+          <div class="card__title"><i class="fas fa-plus-circle"></i> <span id="serviceFormTitle">Новая услуга</span></div>
+          <div class="card__text">
+            <div class="admin-form-group">
+              <label>Картинка услуги</label>
+              <label class="file-input-wrap" for="serviceMediaInput">
+                <i class="fas fa-image"></i>
+                <span class="file-name" id="serviceMediaName">Выберите картинку</span>
+                <input type="file" id="serviceMediaInput" accept="image/*" />
+              </label>
+            </div>
+            <div class="preview-box" id="serviceMediaPreview" style="display:none"></div>
+            <div class="admin-form-group"><label for="serviceNameInput">Название</label><input type="text" id="serviceNameInput" maxlength="120" /></div>
+            <div class="admin-form-group"><label for="serviceDescInput">Описание</label><textarea id="serviceDescInput"></textarea></div>
+            <div class="admin-form-group"><label for="servicePriceInput">Цена</label><input type="text" id="servicePriceInput" maxlength="60" /></div>
+            <button class="btn-admin" id="serviceSaveBtn" style="width:100%"><i class="fas fa-save"></i> <span id="serviceSaveBtnText">Добавить услугу</span></button>
+            <button class="btn-admin secondary" id="serviceCancelEditBtn" style="width:100%;margin-top:8px;display:none">Отмена</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__title"><i class="fas fa-list"></i> Существующие услуги</div>
+          <div id="servicesAdminList"></div>
+        </div>
+      </div>
+
+      <div class="admin-tab-content" id="adminTabWallpapers" style="display:none">
+        <div class="card" style="border-color:var(--accent)">
+          <div class="card__title"><i class="fas fa-moon"></i> Тёмная тема</div>
+          <div class="card__text">
+            <div class="admin-form-group">
+              <label>Живые обои (видео)</label>
+              <label class="file-input-wrap" for="wpDarkLiveInput">
+                <i class="fas fa-video"></i>
+                <span class="file-name" id="wpDarkLiveName">Не задано</span>
+                <input type="file" id="wpDarkLiveInput" accept="video/*" />
+              </label>
+              <div class="wp-status" id="wpDarkLiveStatus"></div>
+            </div>
+            <button class="btn-admin secondary" data-wp-remove="dark|live" style="width:100%;margin-bottom:16px"><i class="fas fa-trash"></i> Удалить живые обои</button>
+
+            <div class="admin-form-group">
+              <label>Обычные обои (картинка)</label>
+              <label class="file-input-wrap" for="wpDarkStaticInput">
+                <i class="fas fa-image"></i>
+                <span class="file-name" id="wpDarkStaticName">Не задано</span>
+                <input type="file" id="wpDarkStaticInput" accept="image/*" />
+              </label>
+              <div class="wp-status" id="wpDarkStaticStatus"></div>
+            </div>
+            <button class="btn-admin secondary" data-wp-remove="dark|static" style="width:100%;margin-bottom:16px"><i class="fas fa-trash"></i> Удалить обычные обои</button>
+
+            <div class="admin-form-group">
+              <label>Звук на фоне</label>
+              <label class="file-input-wrap" for="wpDarkSoundInput">
+                <i class="fas fa-music"></i>
+                <span class="file-name" id="wpDarkSoundName">Не задано</span>
+                <input type="file" id="wpDarkSoundInput" accept="audio/*" />
+              </label>
+              <div class="wp-status" id="wpDarkSoundStatus"></div>
+            </div>
+            <button class="btn-admin secondary" data-wp-remove="dark|sound" style="width:100%"><i class="fas fa-trash"></i> Удалить звук</button>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:var(--accent)">
+          <div class="card__title"><i class="fas fa-sun"></i> Светлая тема</div>
+          <div class="card__text">
+            <div class="admin-form-group">
+              <label>Живые обои (видео)</label>
+              <label class="file-input-wrap" for="wpLightLiveInput">
+                <i class="fas fa-video"></i>
+                <span class="file-name" id="wpLightLiveName">Не задано</span>
+                <input type="file" id="wpLightLiveInput" accept="video/*" />
+              </label>
+              <div class="wp-status" id="wpLightLiveStatus"></div>
+            </div>
+            <button class="btn-admin secondary" data-wp-remove="light|live" style="width:100%;margin-bottom:16px"><i class="fas fa-trash"></i> Удалить живые обои</button>
+
+            <div class="admin-form-group">
+              <label>Обычные обои (картинка)</label>
+              <label class="file-input-wrap" for="wpLightStaticInput">
+                <i class="fas fa-image"></i>
+                <span class="file-name" id="wpLightStaticName">Не задано</span>
+                <input type="file" id="wpLightStaticInput" accept="image/*" />
+              </label>
+              <div class="wp-status" id="wpLightStaticStatus"></div>
+            </div>
+            <button class="btn-admin secondary" data-wp-remove="light|static" style="width:100%;margin-bottom:16px"><i class="fas fa-trash"></i> Удалить обычные обои</button>
+
+            <div class="admin-form-group">
+              <label>Звук на фоне</label>
+              <label class="file-input-wrap" for="wpLightSoundInput">
+                <i class="fas fa-music"></i>
+                <span class="file-name" id="wpLightSoundName">Не задано</span>
+                <input type="file" id="wpLightSoundInput" accept="audio/*" />
+              </label>
+              <div class="wp-status" id="wpLightSoundStatus"></div>
+            </div>
+            <button class="btn-admin secondary" data-wp-remove="light|sound" style="width:100%"><i class="fas fa-trash"></i> Удалить звук</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__text" style="font-size:.85rem;color:var(--text-muted)">
+            <p style="margin-bottom:8px"><strong style="color:var(--text)">Примечание:</strong></p>
+            <p style="margin-bottom:6px">Файлы хранятся в облаке Cloudflare KV. Лимит одного файла — ~20 МБ (для видео рекомендуется до 5 МБ).</p>
+            <p>Если файл не задан — используется стандартный из папки media/imoby.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+  <button class="sidebar__close" id="sidebarClose" aria-label="Закрыть меню"><i class="fas fa-xmark"></i></button>
+  <div class="sidebar__header">
+    <span class="logo">rootsql</span>
+    <div class="controls">
+      <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему"><i class="fas fa-moon"></i></button>
+      <button class="lang-toggle" id="langToggle">RUS</button>
+    </div>
+  </div>
+  <nav class="sidebar__nav">
+    <button class="nav-item active" data-page="home"><i class="fas fa-house"></i> <span>Главное меню</span></button>
+    <button class="nav-item" data-page="store"><i class="fas fa-store"></i> <span>Магазин</span></button>
+    <button class="nav-item" data-page="order"><i class="fas fa-paper-plane"></i> <span>Заказать</span></button>
+    <button class="nav-item" data-page="faq"><i class="fas fa-question-circle"></i> <span>Частые вопросы</span></button>
+    <button class="nav-item" data-page="settings" id="settingsNavBtn"><i class="fas fa-cog"></i> <span>Настройки</span></button>
+    <button class="nav-item" data-action="channel"><i class="fab fa-telegram"></i> <span>Наш канал</span></button>
+    <button class="nav-item" data-action="instructions"><i class="fas fa-circle-info"></i> <span>Инструкция</span></button>
+  </nav>
+  <div class="sidebar__footer"><a href="https://t.me/date_bad" target="_blank">наш телеграм канал — @date_bad</a></div>
+</aside>
+
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-modal">
+    <button class="close-settings" id="settingsClose"><i class="fas fa-times"></i></button>
+    <h2>Настройки</h2>
+    <div class="settings-group">
+      <label><input type="checkbox" id="optGyro" checked> <span>Гироскоп</span></label>
+      <div class="hint">Движение блоков при наклоне устройства</div>
+    </div>
+    <div class="settings-group">
+      <label><input type="checkbox" id="optCardAnim" checked> <span>Анимация карточек</span></label>
+      <div class="hint">Покачивание карточек</div>
+    </div>
+    <div class="settings-group">
+      <label><input type="checkbox" id="optFixBg"> <span>Фиксация фона</span></label>
+      <div class="hint">Остановить видео на фоне</div>
+    </div>
+    <div class="settings-group"><label><input type="checkbox" id="optBgSound"> <span>Звук обоев</span></label><div class="hint">По умолчанию выключен.</div></div>
+    <div class="settings-group"><label>Тип обоев</label><select id="optWallpaperType"><option value="live">Живый обой</option><option value="static">Обычный обой</option></select></div>
+    <div class="settings-group">
+      <label><input type="checkbox" id="optOptimize"> <span>Оптимизация</span></label>
+      <div class="hint">Отключает размытие и тени для производительности</div>
+    </div>
+    <div class="settings-group">
+      <label>Шрифт текста</label>
+      <select id="optFont"><option value="inter">Inter</option><option value="serif">Serif</option><option value="monospace">Monospace</option></select>
+    </div>
+    <div class="settings-group" style="border-bottom:none">
+      <button class="btn-submit" id="optRereadRules">Прочитать все условия снова</button>
+    </div>
+  </div>
+</div>
+
+<div class="rules-overlay" id="rulesOverlay">
+  <div class="rules-modal">
+    <h2>Правила использования</h2>
+    <p><strong>Данный сайт не более чем переходник.</strong> Сайт не предоставляет инструменты или же не продаёт запрещённое. Всё в рамках закона РФ и других стран.</p>
+    <p>Администратор не несёт ответственности за действия пользователей после продажи того или иного инструмента. Администратор не продаёт ничего незаконного. Все сделки осуществляются на добровольной основе.</p>
+    <p>Администратор не виновен и не отвечает за действия других пользователей после продажи. Любые инструменты предоставляются «как есть», без гарантий.</p>
+    <button class="agree-btn" id="agreeBtn">Я согласен</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============ UI helpers ============ */
+const toast = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg){
+  if(toastTimer) clearTimeout(toastTimer);
+  toast.textContent = msg;
+  toast.classList.add('show');
+  toastTimer = setTimeout(()=>{ toast.classList.remove('show'); toastTimer=null; },2200);
+}
+function escapeHtml(str){
+  return String(str||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============ API ============ */
+async function api(path, opts={}){
+  const init = { method: opts.method||'GET', headers:{'Content-Type':'application/json'}, credentials:'same-origin' };
+  if(opts.body) init.body = JSON.stringify(opts.body);
+  const res = await fetch(path, init);
+  let data = null;
+  try { data = await res.json(); } catch(_) {}
+  if(!res.ok){ throw new Error((data && data.error) || ('HTTP '+res.status)); }
+  return data;
+}
+
+/* ============ State ============ */
+let postsCache = [];
+let servicesCache = [];
+let wallpapersCache = { light:{}, dark:{} };
+let isLight = localStorage.getItem('rootsql-theme') === 'light';
+let wallpaperType = localStorage.getItem('optWallpaperType') || 'live';
+let wallpaperSound = localStorage.getItem('optBgSound') === 'true';
+let activeContentVideo = null;
+let wallpaperPausedByContent = false;
+let wallpaperResumeAfterContent = false;
+let suppressContentPauseResume = false;
+
+const DEFAULT_WALLPAPERS = {
+  light: { live: 'media/myby2.mp4', static: 'imoby/obo2.png' },
+  dark:  { live: 'media/myby.mp4',  static: 'imoby/obo.png' }
+};
+
+function getWallpaperSrc(theme, type){
+  if(wallpapersCache[theme] && wallpapersCache[theme][type]) return wallpapersCache[theme][type];
+  return DEFAULT_WALLPAPERS[theme][type] || null;
+}
+function validWallpaperType(v){ return v === 'static' || v === 'live' ? v : 'live'; }
+
+const bgVideo = document.getElementById('bgVideo');
+const bgImage = document.getElementById('bgImage');
+const bgAudio = document.getElementById('bgAudio');
+
+function pauseWallpaperMedia(){
+  try { bgVideo.pause(); } catch(_) {}
+  try { bgAudio.pause(); } catch(_) {}
+}
+
+async function playWallpaper(userGesture=false){
+  if(document.hidden) return false;
+  if(document.body.classList.contains('wallpaper-video-paused')) return false;
+  if(document.getElementById('optFixBg')?.checked) return false;
+
+  const theme = isLight ? 'light' : 'dark';
+  const customSound = (wallpapersCache[theme] && wallpapersCache[theme].sound) || null;
+  const wantedSound = !!wallpaperSound;
+
+  if(customSound){
+    if(bgAudio.getAttribute('src') !== customSound){
+      bgAudio.src = customSound;
+      bgAudio.load();
+    }
+    bgAudio.loop = true;
+  } else {
+    if(bgAudio.getAttribute('src')){
+      bgAudio.pause();
+      bgAudio.removeAttribute('src');
+      bgAudio.load();
+    }
+  }
+
+  if(wallpaperType === 'live'){
+    bgVideo.loop = true;
+    try {
+      bgVideo.muted = customSound ? true : (userGesture ? !wantedSound : true);
+      await bgVideo.play();
+      if(userGesture && !customSound) bgVideo.muted = !wantedSound;
+    } catch(err){
+      try {
+        bgVideo.muted = true;
+        await bgVideo.play();
+        if(userGesture && wantedSound && !customSound) bgVideo.muted = false;
+      } catch(err2){}
+    }
+  }
+
+  if(customSound){
+    bgAudio.muted = !wantedSound;
+    if(wantedSound && !activeContentVideo){
+      try { await bgAudio.play(); } catch(e){}
+    } else {
+      bgAudio.pause();
+    }
+  }
+  return true;
+}
+
+function applyWallpaper(){
+  wallpaperType = validWallpaperType(wallpaperType);
+  const theme = isLight ? 'light' : 'dark';
+  const src = getWallpaperSrc(theme, wallpaperType);
+  const customSound = (wallpapersCache[theme] && wallpapersCache[theme].sound) || null;
+  localStorage.setItem('optWallpaperType', wallpaperType);
+
+  if(customSound){
+    if(bgAudio.getAttribute('src') !== customSound){
+      bgAudio.src = customSound;
+      bgAudio.load();
+    }
+    bgAudio.loop = true;
+  } else {
+    if(bgAudio.getAttribute('src')){
+      bgAudio.pause();
+      bgAudio.removeAttribute('src');
+      bgAudio.load();
+    }
+  }
+
+  if(wallpaperType === 'static'){
+    document.body.classList.add('wallpaper-static');
+    document.body.classList.remove('wallpaper-video-paused');
+    bgVideo.pause();
+    bgVideo.removeAttribute('src');
+    bgVideo.load();
+    bgImage.src = src || '';
+    if(customSound && wallpaperSound && !document.getElementById('optFixBg')?.checked && !activeContentVideo){
+      bgAudio.muted = false;
+      bgAudio.play().catch(()=>{});
+    }
+    return;
+  }
+
+  document.body.classList.remove('wallpaper-static');
+  bgImage.src = '';
+  if(bgVideo.getAttribute('src') !== src){
+    bgVideo.src = src;
+    bgVideo.load();
+  }
+  bgVideo.loop = true;
+  if(customSound) bgVideo.muted = true;
+  else bgVideo.muted = !!activeContentVideo || !wallpaperSound;
+
+  if(document.getElementById('optFixBg')?.checked || activeContentVideo){
+    document.body.classList.add('wallpaper-video-paused');
+    pauseWallpaperMedia();
+  } else {
+    document.body.classList.remove('wallpaper-video-paused');
+    playWallpaper(false);
+  }
+}
+
+function setTheme(light){
+  isLight = !!light;
+  document.body.classList.toggle('light', isLight);
+  const themeIcon = document.querySelector('#themeToggle i');
+  if(themeIcon) themeIcon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+  localStorage.setItem('rootsql-theme', isLight ? 'light' : 'dark');
+  applyWallpaper();
+}
+
+/* ============ Content videos mgmt ============ */
+const contentVideos = () => Array.from(document.querySelectorAll('video:not(#bgVideo)'));
+
+function pauseAllContentVideos(except){
+  contentVideos().forEach(v=>{ if(v !== except){ try{ v.pause(); }catch(_){} } });
+}
+function stopWallpaperForContent(){
+  wallpaperPausedByContent = true;
+  wallpaperResumeAfterContent = wallpaperType === 'live' && !document.hidden && !document.getElementById('optFixBg')?.checked;
+  pauseWallpaperMedia();
+  bgVideo.muted = true;
+  document.body.classList.add('wallpaper-video-paused');
+}
+async function resumeWallpaperAfterContent(){
+  if(activeContentVideo || !wallpaperResumeAfterContent) return;
+  wallpaperResumeAfterContent = false;
+  wallpaperPausedByContent = false;
+  document.body.classList.remove('wallpaper-video-paused');
+  if(!document.hidden && !document.getElementById('optFixBg')?.checked){
+    await playWallpaper(false);
+  }
+}
+function onContentVideoPlay(video){
+  suppressContentPauseResume = true;
+  pauseAllContentVideos(video);
+  suppressContentPauseResume = false;
+  activeContentVideo = video;
+  stopWallpaperForContent();
+}
+function onContentVideoStop(video){
+  if(activeContentVideo === video) activeContentVideo = null;
+  if(!suppressContentPauseResume){
+    const another = contentVideos().some(v=>!v.paused && !v.ended);
+    if(!another) resumeWallpaperAfterContent();
+  }
+}
+document.addEventListener('play', e=>{
+  const v = e.target;
+  if(!(v instanceof HTMLVideoElement) || v.id === 'bgVideo') return;
+  onContentVideoPlay(v);
+}, true);
+document.addEventListener('pause', e=>{
+  const v = e.target;
+  if(!(v instanceof HTMLVideoElement) || v.id === 'bgVideo') return;
+  onContentVideoStop(v);
+}, true);
+document.addEventListener('ended', e=>{
+  const v = e.target;
+  if(!(v instanceof HTMLVideoElement) || v.id === 'bgVideo') return;
+  onContentVideoStop(v);
+}, true);
+
+/* ============ Render ============ */
+function renderDynamicPosts(){
+  const container = document.getElementById('dynamicPostsContainer');
+  if(!container) return;
+  container.innerHTML = '';
+  if(!postsCache.length) return;
+  const sorted = [...postsCache].reverse();
+  sorted.forEach(post=>{
+    const el = document.createElement('div');
+    el.className = 'post-section animate-on-scroll visible custom-post';
+    let mediaHtml = '';
+    if(post.media){
+      if(post.mediaType === 'video'){
+        mediaHtml = `<video class="post-media" controls src="${post.media}"></video>`;
+      } else {
+        mediaHtml = `<img class="post-media" src="${post.media}" alt="${escapeHtml(post.title)}" />`;
+      }
+    }
+    el.innerHTML = `${mediaHtml}<h2>${escapeHtml(post.title)}</h2><p>${escapeHtml(post.description)}</p>`;
+    container.appendChild(el);
+  });
+}
+
+function renderDynamicServices(){
+  const container = document.getElementById('customServicesContainer');
+  if(!container) return;
+  container.innerHTML = '';
+  if(!servicesCache.length) return;
+  servicesCache.forEach(svc=>{
+    const card = document.createElement('div');
+    card.className = 'custom-service-card';
+    card.innerHTML = `
+      ${svc.media ? `<img class="svc-img" src="${svc.media}" alt="${escapeHtml(svc.name)}" />` : `<div class="svc-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fas fa-image"></i></div>`}
+      <div class="svc-info">
+        <div class="svc-name">${escapeHtml(svc.name)}</div>
+        ${svc.description?`<div class="svc-desc">${escapeHtml(svc.description)}</div>`:''}
+        ${svc.price?`<div class="svc-price">${escapeHtml(svc.price)}</div>`:''}
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+async function loadPublicData(){
+  try {
+    const [posts, services, wallpapers] = await Promise.all([
+      api('/api/posts').catch(()=>[]),
+      api('/api/services').catch(()=>[]),
+      api('/api/wallpapers').catch(()=>({light:{},dark:{}}))
+    ]);
+    postsCache = posts || [];
+    servicesCache = services || [];
+    wallpapersCache = wallpapers || {light:{},dark:{}};
+    renderDynamicPosts();
+    renderDynamicServices();
+    applyWallpaper();
+  } catch(e){ console.warn('loadPublicData', e); }
+}
+
+/* ============ Admin auth ============ */
+const adminLoading = document.getElementById('adminLoading');
+const adminLoginBox = document.getElementById('adminLoginBox');
+const adminContentBox = document.getElementById('adminContentBox');
+let isAdmin = false;
+
+async function checkAuth(){
+  try {
+    const r = await api('/api/me');
+    isAdmin = !!(r && r.authenticated);
+  } catch(_){ isAdmin = false; }
+  updateAdminUI();
+}
+
+function updateAdminUI(){
+  adminLoading.style.display = 'none';
+  if(isAdmin){
+    adminLoginBox.style.display = 'none';
+    adminContentBox.style.display = 'block';
+    renderAdminLists();
+    refreshWallpaperLabels();
+  } else {
+    adminLoginBox.style.display = 'block';
+    adminContentBox.style.display = 'none';
+  }
+}
+
+document.getElementById('adminLoginBtn').addEventListener('click', async ()=>{
+  const pass = document.getElementById('adminPasswordInput').value;
+  const err = document.getElementById('adminLoginError');
+  err.style.display = 'none';
+  try {
+    await api('/api/login',{method:'POST',body:{password:pass}});
+    document.getElementById('adminPasswordInput').value = '';
+    showToast('Добро пожаловать!');
+    isAdmin = true;
+    updateAdminUI();
+  } catch(e){
+    err.textContent = e.message || 'Ошибка входа';
+    err.style.display = 'block';
+  }
+});
+document.getElementById('adminPasswordInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') document.getElementById('adminLoginBtn').click();
+});
+document.getElementById('adminLogoutBtn').addEventListener('click', async ()=>{
+  try { await api('/api/logout',{method:'POST'}); } catch(_){}
+  isAdmin = false;
+  showToast('Вы вышли');
+  updateAdminUI();
+});
+
+/* ============ Admin tabs ============ */
+document.querySelectorAll('.admin-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab;
+    document.getElementById('adminTabPosts').style.display = target==='posts'?'block':'none';
+    document.getElementById('adminTabServices').style.display = target==='services'?'block':'none';
+    document.getElementById('adminTabWallpapers').style.display = target==='wallpapers'?'block':'none';
+    if(target==='wallpapers') refreshWallpaperLabels();
+  });
+});
+
+/* ============ File to dataURL ============ */
+function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = e => resolve(e.target.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ============ Posts ============ */
+let pendingPostMedia = null, pendingPostMediaType = null, editingPostId = null;
+
+document.getElementById('postMediaInput').addEventListener('change', async function(){
+  const file = this.files[0]; if(!file) return;
+  if(file.size > 8*1024*1024){ showToast('Файл больше 8 МБ'); this.value=''; return; }
+  try {
+    const dataUrl = await fileToDataURL(file);
+    pendingPostMedia = dataUrl;
+    pendingPostMediaType = file.type.startsWith('video/') ? 'video' : 'image';
+    document.getElementById('postMediaName').textContent = file.name + ' (' + Math.round(file.size/1024) + ' КБ)';
+    const preview = document.getElementById('postMediaPreview');
+    preview.style.display = 'block';
+    preview.innerHTML = pendingPostMediaType === 'video'
+      ? `<video src="${dataUrl}" controls></video>`
+      : `<img src="${dataUrl}" alt="preview" />`;
+  } catch(e){ showToast('Ошибка чтения файла'); }
+});
+
+function resetPostForm(){
+  editingPostId = null;
+  pendingPostMedia = null; pendingPostMediaType = null;
+  document.getElementById('postMediaInput').value = '';
+  document.getElementById('postMediaPreview').style.display='none';
+  document.getElementById('postMediaPreview').innerHTML='';
+  document.getElementById('postMediaName').textContent='Выберите файл';
+  document.getElementById('postTitleInput').value='';
+  document.getElementById('postDescInput').value='';
+  document.getElementById('postFormTitle').textContent='Новый пост';
+  document.getElementById('postSaveBtnText').textContent='Добавить пост';
+  document.getElementById('postCancelEditBtn').style.display='none';
+}
+
+document.getElementById('postSaveBtn').addEventListener('click', async ()=>{
+  const title = document.getElementById('postTitleInput').value.trim();
+  const description = document.getElementById('postDescInput').value.trim();
+  if(!title){ showToast('Введи заголовок'); return; }
+  if(!description){ showToast('Введи описание'); return; }
+  try {
+    if(editingPostId){
+      const body = { action:'update', post:{ id: editingPostId, title, description } };
+      if(pendingPostMedia){ body.post.media = pendingPostMedia; body.post.mediaType = pendingPostMediaType; }
+      const r = await api('/api/posts',{method:'POST',body});
+      postsCache = r.posts || postsCache;
+      showToast('Пост обновлён');
+    } else {
+      const body = { action:'add', post:{ title, description, media: pendingPostMedia, mediaType: pendingPostMediaType } };
+      const r = await api('/api/posts',{method:'POST',body});
+      postsCache = r.posts || postsCache;
+      showToast('Пост добавлен');
+    }
+    resetPostForm();
+    renderAdminLists();
+    renderDynamicPosts();
+  } catch(e){ showToast('Ошибка: '+e.message); }
+});
+document.getElementById('postCancelEditBtn').addEventListener('click', resetPostForm);
+
+function editPost(id){
+  const post = postsCache.find(p=>p.id===id); if(!post) return;
+  editingPostId = id;
+  pendingPostMedia = null; pendingPostMediaType = null;
+  document.getElementById('postTitleInput').value = post.title;
+  document.getElementById('postDescInput').value = post.description;
+  const preview = document.getElementById('postMediaPreview');
+  if(post.media){
+    preview.style.display='block';
+    preview.innerHTML = post.mediaType === 'video'
+      ? `<video src="${post.media}" controls></video>`
+      : `<img src="${post.media}" alt="preview" />`;
+    document.getElementById('postMediaName').textContent='Оставь пустым, чтобы сохранить текущее медиа';
+  } else { preview.style.display='none'; }
+  document.getElementById('postFormTitle').textContent='Редактирование поста';
+  document.getElementById('postSaveBtnText').textContent='Сохранить изменения';
+  document.getElementById('postCancelEditBtn').style.display='block';
+  document.getElementById('page-admin').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function deletePost(id){
+  if(!confirm('Удалить этот пост?')) return;
+  try {
+    const r = await api('/api/posts',{method:'POST',body:{action:'delete',id}});
+    postsCache = r.posts || [];
+    showToast('Пост удалён');
+    renderAdminLists();
+    renderDynamicPosts();
+  } catch(e){ showToast('Ошибка: '+e.message); }
+}
+window.__editPost = editPost;
+window.__deletePost = deletePost;
+
+/* ============ Services ============ */
+let pendingServiceMedia = null, editingServiceId = null;
+
+document.getElementById('serviceMediaInput').addEventListener('change', async function(){
+  const file = this.files[0]; if(!file) return;
+  if(file.size > 4*1024*1024){ showToast('Файл больше 4 МБ'); this.value=''; return; }
+  try {
+    const dataUrl = await fileToDataURL(file);
+    pendingServiceMedia = dataUrl;
+    document.getElementById('serviceMediaName').textContent = file.name + ' (' + Math.round(file.size/1024) + ' КБ)';
+    const preview = document.getElementById('serviceMediaPreview');
+    preview.style.display='block';
+    preview.innerHTML = `<img src="${dataUrl}" alt="preview" />`;
+  } catch(e){ showToast('Ошибка чтения файла'); }
+});
+
+function resetServiceForm(){
+  editingServiceId = null;
+  pendingServiceMedia = null;
+  document.getElementById('serviceMediaInput').value='';
+  document.getElementById('serviceMediaPreview').style.display='none';
+  document.getElementById('serviceMediaPreview').innerHTML='';
+  document.getElementById('serviceMediaName').textContent='Выберите картинку';
+  document.getElementById('serviceNameInput').value='';
+  document.getElementById('serviceDescInput').value='';
+  document.getElementById('servicePriceInput').value='';
+  document.getElementById('serviceFormTitle').textContent='Новая услуга';
+  document.getElementById('serviceSaveBtnText').textContent='Добавить услугу';
+  document.getElementById('serviceCancelEditBtn').style.display='none';
+}
+
+document.getElementById('serviceSaveBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('serviceNameInput').value.trim();
+  const description = document.getElementById('serviceDescInput').value.trim();
+  const price = document.getElementById('servicePriceInput').value.trim();
+  if(!name){ showToast('Введи название'); return; }
+  if(!price){ showToast('Введи цену'); return; }
+  try {
+    if(editingServiceId){
+      const body = { action:'update', service:{ id: editingServiceId, name, description, price } };
+      if(pendingServiceMedia) body.service.media = pendingServiceMedia;
+      const r = await api('/api/services',{method:'POST',body});
+      servicesCache = r.services || servicesCache;
+      showToast('Услуга обновлена');
+    } else {
+      const body = { action:'add', service:{ name, description, price, media: pendingServiceMedia } };
+      const r = await api('/api/services',{method:'POST',body});
+      servicesCache = r.services || servicesCache;
+      showToast('Услуга добавлена');
+    }
+    resetServiceForm();
+    renderAdminLists();
+    renderDynamicServices();
+  } catch(e){ showToast('Ошибка: '+e.message); }
+});
+document.getElementById('serviceCancelEditBtn').addEventListener('click', resetServiceForm);
+
+function editService(id){
+  const svc = servicesCache.find(s=>s.id===id); if(!svc) return;
+  editingServiceId = id;
+  pendingServiceMedia = null;
+  document.getElementById('serviceNameInput').value = svc.name;
+  document.getElementById('serviceDescInput').value = svc.description||'';
+  document.getElementById('servicePriceInput').value = svc.price||'';
+  const preview = document.getElementById('serviceMediaPreview');
+  if(svc.media){
+    preview.style.display='block';
+    preview.innerHTML = `<img src="${svc.media}" alt="preview" />`;
+    document.getElementById('serviceMediaName').textContent='Оставь пустым, чтобы сохранить текущую картинку';
+  } else { preview.style.display='none'; }
+  document.getElementById('serviceFormTitle').textContent='Редактирование услуги';
+  document.getElementById('serviceSaveBtnText').textContent='Сохранить изменения';
+  document.getElementById('serviceCancelEditBtn').style.display='block';
+  document.getElementById('page-admin').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function deleteService(id){
+  if(!confirm('Удалить эту услугу?')) return;
+  try {
+    const r = await api('/api/services',{method:'POST',body:{action:'delete',id}});
+    servicesCache = r.services || [];
+    showToast('Услуга удалена');
+    renderAdminLists();
+    renderDynamicServices();
+  } catch(e){ showToast('Ошибка: '+e.message); }
+}
+window.__editService = editService;
+window.__deleteService = deleteService;
+
+/* ============ Admin lists ============ */
+function renderAdminLists(){
+  const postsList = document.getElementById('postsAdminList');
+  const servicesList = document.getElementById('servicesAdminList');
+  if(!postsList || !servicesList) return;
+
+  if(!postsCache.length){
+    postsList.innerHTML = '<div class="admin-empty">Пока нет постов</div>';
+  } else {
+    postsList.innerHTML = postsCache.slice().reverse().map(p=>`
+      <div class="admin-item">
+        ${p.media ? (p.mediaType==='video' ? `<video class="thumb" src="${p.media}" muted></video>` : `<img class="thumb" src="${p.media}" alt="" />`) : `<div class="thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fas fa-image"></i></div>`}
+        <div class="info">
+          <div class="name">${escapeHtml(p.title)}</div>
+          <div class="desc">${escapeHtml((p.description||'').slice(0,80))}</div>
+        </div>
+        <div class="actions">
+          <button onclick="window.__editPost('${p.id}')"><i class="fas fa-pen"></i></button>
+          <button class="danger" onclick="window.__deletePost('${p.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>`).join('');
+  }
+
+  if(!servicesCache.length){
+    servicesList.innerHTML = '<div class="admin-empty">Пока нет услуг</div>';
+  } else {
+    servicesList.innerHTML = servicesCache.slice().reverse().map(s=>`
+      <div class="admin-item">
+        ${s.media ? `<img class="thumb" src="${s.media}" alt="" />` : `<div class="thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fas fa-image"></i></div>`}
+        <div class="info">
+          <div class="name">${escapeHtml(s.name)}</div>
+          <div class="desc">${escapeHtml((s.description||'').slice(0,50))} • <span style="color:var(--accent)">${escapeHtml(s.price||'')}</span></div>
+        </div>
+        <div class="actions">
+          <button onclick="window.__editService('${s.id}')"><i class="fas fa-pen"></i></button>
+          <button class="danger" onclick="window.__deleteService('${s.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>`).join('');
+  }
+}
+
+/* ============ Wallpapers admin ============ */
+const WP_INPUTS = [
+  { inputId:'wpDarkLiveInput',   theme:'dark',  type:'live',   statusId:'wpDarkLiveStatus',   nameId:'wpDarkLiveName'   },
+  { inputId:'wpDarkStaticInput', theme:'dark',  type:'static', statusId:'wpDarkStaticStatus', nameId:'wpDarkStaticName' },
+  { inputId:'wpDarkSoundInput',  theme:'dark',  type:'sound',  statusId:'wpDarkSoundStatus',  nameId:'wpDarkSoundName'  },
+  { inputId:'wpLightLiveInput',   theme:'light', type:'live',   statusId:'wpLightLiveStatus',   nameId:'wpLightLiveName'   },
+  { inputId:'wpLightStaticInput', theme:'light', type:'static', statusId:'wpLightStaticStatus', nameId:'wpLightStaticName' },
+  { inputId:'wpLightSoundInput',  theme:'light', type:'sound',  statusId:'wpLightSoundStatus',  nameId:'wpLightSoundName'  }
+];
+
+function wpLabelText(theme, type){
+  const has = wallpapersCache[theme] && wallpapersCache[theme][type];
+  if(has) return 'Свой файл задан (нажми чтобы заменить)';
+  if(type === 'sound') return 'Не задано (нет фонового звука)';
+  return 'Не задано (используется стандарт)';
+}
+
+function refreshWallpaperLabels(){
+  WP_INPUTS.forEach(cfg=>{
+    const nameEl = document.getElementById(cfg.nameId);
+    const statusEl = document.getElementById(cfg.statusId);
+    const has = wallpapersCache[cfg.theme] && wallpapersCache[cfg.theme][cfg.type];
+    if(nameEl) nameEl.textContent = has ? 'Свой файл задан' : 'Не задано';
+    if(statusEl){
+      statusEl.textContent = wpLabelText(cfg.theme, cfg.type);
+      statusEl.classList.toggle('active', !!has);
+    }
+  });
+}
+
+WP_INPUTS.forEach(cfg=>{
+  const input = document.getElementById(cfg.inputId);
+  if(!input) return;
+  input.addEventListener('change', async function(){
+    const file = this.files[0]; if(!file) return;
+    const maxSize = cfg.type === 'sound' ? 4*1024*1024 : 20*1024*1024;
+    if(file.size > maxSize){ showToast('Файл больше ' + Math.round(maxSize/1024/1024) + ' МБ'); this.value=''; return; }
+    try {
+      const dataUrl = await fileToDataURL(file);
+      const r = await api('/api/wallpapers',{method:'POST',body:{action:'set',theme:cfg.theme,type:cfg.type,data:dataUrl}});
+      wallpapersCache = r.wallpapers || wallpapersCache;
+      showToast('Загружено');
+      this.value = '';
+      refreshWallpaperLabels();
+      if((cfg.theme==='light') === isLight) applyWallpaper();
+    } catch(e){ showToast('Ошибка: '+e.message); }
+  });
+});
+
+document.querySelectorAll('[data-wp-remove]').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    const [theme, type] = btn.dataset.wpRemove.split('|');
+    const has = wallpapersCache[theme] && wallpapersCache[theme][type];
+    if(!has){ showToast('Нечего удалять'); return; }
+    if(!confirm('Удалить этот файл? Будет использоваться стандарт.')) return;
+    try {
+      const r = await api('/api/wallpapers',{method:'POST',body:{action:'remove',theme,type}});
+      wallpapersCache = r.wallpapers || wallpapersCache;
+      showToast('Удалено');
+      refreshWallpaperLabels();
+      if((theme==='light') === isLight) applyWallpaper();
+    } catch(e){ showToast('Ошибка: '+e.message); }
+  });
+});
+
+/* ============ Navigation ============ */
+const menuToggle = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const sidebarClose = document.getElementById('sidebarClose');
+const navItems = document.querySelectorAll('.sidebar__nav .nav-item');
+const pages = {
+  home: document.getElementById('page-home'),
+  store: document.getElementById('page-store'),
+  order: document.getElementById('page-order'),
+  faq: document.getElementById('page-faq'),
+  admin: document.getElementById('page-admin')
+};
+let savedBodyOverflow = '';
+function lockBodyScroll(){ if(!document.body.classList.contains('ui-scroll-locked')){ savedBodyOverflow=document.body.style.overflow||''; document.body.classList.add('ui-scroll-locked'); document.body.style.overflow='hidden'; } }
+function unlockBodyScroll(){ document.body.classList.remove('ui-scroll-locked'); document.body.style.overflow=savedBodyOverflow; savedBodyOverflow=''; }
+function openSidebar(){ sidebar.classList.add('open'); sidebarOverlay.classList.add('open'); lockBodyScroll(); }
+function closeSidebar(){ sidebar.classList.remove('open'); sidebarOverlay.classList.remove('open'); unlockBodyScroll(); }
+menuToggle.addEventListener('click', openSidebar);
+sidebarClose.addEventListener('click', closeSidebar);
+sidebarOverlay.addEventListener('click', closeSidebar);
+
+window.navigateTo = function(pageId, updateHash=true){
+  if(!pages[pageId]) return;
+  if(typeof contentVideos === 'function') contentVideos().forEach(v=>{ try{v.pause();}catch(_){} });
+  activeContentVideo = null;
+  Object.keys(pages).forEach(k=>pages[k].classList.remove('active'));
+  pages[pageId].classList.add('active');
+  navItems.forEach(item=>{
+    item.classList.remove('active');
+    if(item.getAttribute('data-page') === pageId) item.classList.add('active');
+  });
+  if(updateHash && ['home','store','order','faq','admin'].includes(pageId)) history.replaceState(null,'','#'+pageId);
+  closeSidebar();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(pageId === 'admin') checkAuth();
+};
+window.addEventListener('hashchange',()=>{
+  const page = location.hash.slice(1);
+  if(['home','store','order','faq','admin'].includes(page)) window.navigateTo(page,false);
+});
+navItems.forEach(item=>{
+  item.addEventListener('click', function(){
+    const page = this.getAttribute('data-page');
+    const action = this.getAttribute('data-action');
+    if(page){
+      if(page === 'settings'){ openSettings(); return; }
+      window.navigateTo(page);
+    } else if(action === 'channel'){
+      window.open('https://t.me/date_bad','_blank');
+      closeSidebar();
+    } else if(action === 'instructions'){
+      if(!pages.home.classList.contains('active')) window.navigateTo('home');
+      setTimeout(()=>{
+        const instruction = document.querySelector('#page-home .instruction-list');
+        const target = instruction ? instruction.closest('.card') : null;
+        if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+      },150);
+      closeSidebar();
+    }
+  });
+});
+
+/* ============ Copy triggers ============ */
+document.querySelectorAll('.copy-trigger').forEach(el=>{
+  el.addEventListener('click', function(e){
+    e.stopPropagation();
+    const text = this.getAttribute('data-copy');
+    if(text) copyText(text, 'Скопировано: '+text);
+  });
+});
+function copyText(text, message){
+  if(!text) return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>showToast(message||'Скопировано!')).catch(()=>fallbackCopy(text,message));
+  } else fallbackCopy(text,message);
+}
+function fallbackCopy(text, message){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position='fixed'; ta.style.left='-9999px'; ta.style.top='-9999px';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { const ok = document.execCommand('copy'); showToast(ok?(message||'Скопировано!'):'Не удалось'); }
+  catch(_){ showToast('Не удалось скопировать'); }
+  document.body.removeChild(ta);
+}
+
+/* ============ Order form ============ */
+const orderForm = document.getElementById('orderForm');
+if(orderForm){
+  orderForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const service = document.getElementById('serviceSelect').value;
+    const comment = document.getElementById('comment').value.trim();
+    if(!service){ showToast('Пожалуйста, выберите услугу'); return; }
+    let message = 'Здравствуйте! Хочу заказать: '+service;
+    if(comment) message += '\nКомментарий: '+comment;
+    message += '\n\n(отправлено через сайт)';
+    const encoded = encodeURIComponent(message);
+    let opened = false;
+    try { const popup = window.open('tg://resolve?domain=rootsql&text='+encoded,'_blank'); opened = !!popup; } catch(_){}
+    setTimeout(()=>{
+      if(!opened){
+        const fallback = document.createElement('a');
+        fallback.href = 'https://t.me/rootsql?text='+encoded;
+        fallback.target='_blank'; fallback.rel='noopener';
+        document.body.appendChild(fallback); fallback.click(); fallback.remove();
+      }
+    },250);
+    showToast(opened?'Telegram открывается…':'Открываем Telegram…');
+  });
+}
+
+/* ============ Accordions ============ */
+document.querySelectorAll('.accordion-header').forEach(header=>{
+  header.addEventListener('click', function(){
+    const targetId = this.dataset.target;
+    const acc = document.getElementById(targetId);
+    if(acc) acc.classList.toggle('open');
+  });
+});
+
+/* ============ Scroll top ============ */
+const scrollBtn = document.getElementById('scrollTopBtn');
+window.addEventListener('scroll', ()=>{
+  if(window.scrollY > 300) scrollBtn.classList.add('visible');
+  else scrollBtn.classList.remove('visible');
+});
+scrollBtn.addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
+
+/* ============ Settings modal ============ */
+const settingsOverlay = document.getElementById('settingsOverlay');
+const settingsClose = document.getElementById('settingsClose');
+const settingsNavBtn = document.getElementById('settingsNavBtn');
+function openSettings(){ settingsOverlay.classList.add('open'); sidebar.classList.remove('open'); sidebarOverlay.classList.remove('open'); lockBodyScroll(); }
+function closeSettings(){ settingsOverlay.classList.remove('open'); if(!sidebar.classList.contains('open')) unlockBodyScroll(); }
+settingsNavBtn.addEventListener('click', openSettings);
+settingsClose.addEventListener('click', closeSettings);
+settingsOverlay.addEventListener('click', e=>{ if(e.target === settingsOverlay) closeSettings(); });
+
+const optGyro = document.getElementById('optGyro');
+const optCardAnim = document.getElementById('optCardAnim');
+const optFixBg = document.getElementById('optFixBg');
+const optBgSound = document.getElementById('optBgSound');
+const optWallpaperType = document.getElementById('optWallpaperType');
+const optOptimize = document.getElementById('optOptimize');
+const optFont = document.getElementById('optFont');
+
+/* ============ Gyro / card motion ============ */
+let targetDx = 0, targetDy = 0, currentDx = 0, currentDy = 0;
+let gyroActive = false, gyroLoopRunning = false, autoMove = true, autoLoopRunning = false, autoAngle = 0;
+const blocks = document.querySelectorAll('.card, .post-section, .accordion, .legal-footer');
+const sensitivity = 0.08, maxShift = 15, lerpFactor = 0.12;
+function applyShift(dx,dy){ blocks.forEach(el=>{ el.style.setProperty('--shift-x', dx.toFixed(2)+'px'); el.style.setProperty('--shift-y', dy.toFixed(2)+'px'); }); }
+function autoAnimate(){
+  if(autoLoopRunning || !autoMove) return;
+  autoLoopRunning = true;
+  const tick = ()=>{
+    if(!autoMove){ autoLoopRunning=false; return; }
+    autoAngle += .008;
+    applyShift(Math.sin(autoAngle)*2.5, Math.cos(autoAngle*.7)*2);
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function smoothGyro(){
+  if(gyroLoopRunning) return;
+  gyroLoopRunning = true;
+  const tick = ()=>{
+    if(!gyroActive){ gyroLoopRunning=false; return; }
+    currentDx += (targetDx-currentDx)*lerpFactor;
+    currentDy += (targetDy-currentDy)*lerpFactor;
+    applyShift(currentDx,currentDy);
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function handleOrientation(event){
+  const cb = document.getElementById('optGyro');
+  if(!cb?.checked){ gyroActive=false; return; }
+  const beta = Number(event.beta)||0, gamma = Number(event.gamma)||0;
+  targetDx = Math.max(-maxShift, Math.min(maxShift, gamma*sensitivity));
+  targetDy = Math.max(-maxShift, Math.min(maxShift, beta*sensitivity*.6));
+  gyroActive = true; autoMove = false; smoothGyro();
+}
+let orientationListenerAttached = false;
+async function enableOrientation(){
+  if(!document.getElementById('optGyro')?.checked || orientationListenerAttached) return;
+  try {
+    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
+      const state = await DeviceOrientationEvent.requestPermission();
+      if(state !== 'granted') return;
+    }
+    if(typeof DeviceOrientationEvent === 'undefined') return;
+    window.addEventListener('deviceorientation', handleOrientation, {passive:true});
+    orientationListenerAttached = true;
+    smoothGyro();
+  } catch(err){}
+}
+document.addEventListener('click', ()=>{ enableOrientation(); playWallpaper(true); }, {passive:true});
+if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function') enableOrientation();
+if(localStorage.getItem('optGyro') !== 'false') setTimeout(enableOrientation,300);
+autoAnimate();
+
+/* ============ Load settings ============ */
+function loadSettings(){
+  optGyro.checked = localStorage.getItem('optGyro') !== 'false';
+  optCardAnim.checked = localStorage.getItem('optCardAnim') !== 'false';
+  optFixBg.checked = localStorage.getItem('optFixBg') === 'true';
+  optBgSound.checked = localStorage.getItem('optBgSound') === 'true';
+  optWallpaperType.value = validWallpaperType(localStorage.getItem('optWallpaperType') || 'live');
+  wallpaperType = optWallpaperType.value;
+  wallpaperSound = optBgSound.checked;
+  optOptimize.checked = localStorage.getItem('optOptimize') === 'true';
+  optFont.value = localStorage.getItem('optFont') || 'inter';
+
+  if(!optCardAnim.checked) document.body.classList.add('no-card-animation');
+  else document.body.classList.remove('no-card-animation');
+
+  if(optOptimize.checked) document.body.classList.add('optimized');
+  else document.body.classList.remove('optimized');
+
+  document.body.className = document.body.className.replace(/font-\w+/g, '');
+  document.body.classList.add('font-' + optFont.value);
+}
+
+optGyro.addEventListener('change', function(){
+  localStorage.setItem('optGyro', this.checked ? 'true' : 'false');
+  if(!this.checked){
+    gyroActive=false; autoMove=true;
+    currentDx=currentDy=targetDx=targetDy=0;
+    applyShift(0,0); autoAnimate();
+  } else { autoMove=false; enableOrientation(); }
+});
+optCardAnim.addEventListener('change', function(){
+  localStorage.setItem('optCardAnim', this.checked ? 'true' : 'false');
+  document.body.classList.toggle('no-card-animation', !this.checked);
+});
+optFixBg.addEventListener('change', function(){
+  localStorage.setItem('optFixBg', this.checked ? 'true' : 'false');
+  if(this.checked){
+    document.body.classList.add('wallpaper-video-paused');
+    wallpaperResumeAfterContent = false;
+    pauseWallpaperMedia();
+    bgVideo.muted = true;
+  } else if(!activeContentVideo){
+    document.body.classList.remove('wallpaper-video-paused');
+    playWallpaper(true);
+  }
+});
+optBgSound.addEventListener('change', function(){
+  wallpaperSound = this.checked;
+  localStorage.setItem('optBgSound', wallpaperSound ? 'true' : 'false');
+  const theme = isLight ? 'light' : 'dark';
+  const customSound = (wallpapersCache[theme] && wallpapersCache[theme].sound) || null;
+  if(customSound){
+    bgAudio.muted = !wallpaperSound;
+    if(!activeContentVideo && !optFixBg.checked) playWallpaper(true);
+  } else if(bgVideo && wallpaperType === 'live'){
+    bgVideo.muted = !!activeContentVideo || !wallpaperSound;
+    if(!activeContentVideo && !optFixBg.checked) playWallpaper(true);
+  }
+});
+optWallpaperType.addEventListener('change', function(){
+  wallpaperType = validWallpaperType(this.value);
+  this.value = wallpaperType;
+  document.body.classList.remove('wallpaper-video-paused');
+  localStorage.setItem('optWallpaperType', wallpaperType);
+  applyWallpaper();
+});
+optOptimize.addEventListener('change', function(){
+  localStorage.setItem('optOptimize', this.checked);
+  document.body.classList.toggle('optimized', this.checked);
+});
+optFont.addEventListener('change', function(){
+  localStorage.setItem('optFont', this.value);
+  document.body.className = document.body.className.replace(/font-\w+/g, '');
+  document.body.classList.add('font-' + this.value);
+});
+
+/* ============ Theme toggle ============ */
+document.getElementById('themeToggle').addEventListener('click', ()=>setTheme(!isLight));
+
+/* ============ Rules overlay ============ */
+const rulesOverlay = document.getElementById('rulesOverlay');
+const agreeBtn = document.getElementById('agreeBtn');
+if(!localStorage.getItem('rootsql-rules')) rulesOverlay.classList.add('open');
+agreeBtn.addEventListener('click', function(){
+  localStorage.setItem('rootsql-rules', 'accepted');
+  rulesOverlay.classList.remove('open');
+});
+document.getElementById('optRereadRules').addEventListener('click', ()=>{
+  rulesOverlay.classList.add('open');
+  closeSettings();
+});
+
+/* ============ Flip card ============ */
+const flipInner = document.getElementById('flipCardInner');
+const flipWrap = document.getElementById('flipCardWrap');
+let flipTimer = null, isFlipped = false;
+function flipCard(){ isFlipped = !isFlipped; flipInner.classList.toggle('flipped', isFlipped); }
+function resetFlipTimer(){ if(flipTimer) clearInterval(flipTimer); flipTimer = setInterval(flipCard, 3500); }
+if(flipWrap){
+  flipWrap.addEventListener('click', function(e){
+    if(e.target.closest('.flip-back-btn') || e.target.closest('a')) return;
+    flipCard(); resetFlipTimer();
+  });
+  flipWrap.addEventListener('mouseenter', ()=>{ if(flipTimer) clearInterval(flipTimer); });
+  flipWrap.addEventListener('mouseleave', resetFlipTimer);
+  resetFlipTimer();
+}
+
+/* ============ Sidebar interaction ============ */
+const sidebarEl = document.getElementById('sidebar');
+let sidebarTimeout = null;
+function handleSidebarInteraction(){
+  sidebarEl.classList.add('interacting');
+  menuToggle.classList.add('interacting');
+  if(sidebarTimeout) clearTimeout(sidebarTimeout);
+  sidebarTimeout = setTimeout(()=>{
+    sidebarEl.classList.remove('interacting');
+    menuToggle.classList.remove('interacting');
+  }, 3200);
+}
+sidebarEl.addEventListener('touchstart', handleSidebarInteraction);
+sidebarEl.addEventListener('touchend', handleSidebarInteraction);
+sidebarEl.addEventListener('mousedown', handleSidebarInteraction);
+sidebarEl.addEventListener('mouseup', handleSidebarInteraction);
+
+/* ============ Visibility ============ */
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){
+    contentVideos().forEach(v=>{ try{ v.pause(); }catch(_){} });
+    pauseWallpaperMedia();
+    bgVideo.muted = true;
+    activeContentVideo = null;
+  } else {
+    if(!contentVideos().some(v=>!v.paused && !v.ended) &&
+       !document.getElementById('optFixBg')?.checked && !wallpaperPausedByContent){
+      playWallpaper(false);
+    }
+  }
+});
+window.addEventListener('pageshow', ()=>{
+  if(!contentVideos().some(v=>!v.paused && !v.ended) &&
+     !document.getElementById('optFixBg')?.checked && !wallpaperPausedByContent){
+    playWallpaper(false);
+  }
+});
+
+/* ============ Calculator ============ */
+const resultDisplay = document.getElementById('calcResult');
+const expressionDisplay = document.getElementById('calcExpression');
+let currentInput = '0', previousInput = '', operator = null, waitingForOperand = false, shouldResetInput = false;
+function updateDisplay(){
+  resultDisplay.textContent = currentInput || '0';
+  if(operator && previousInput){
+    let opSymbol = operator;
+    if(operator === '*') opSymbol = '×';
+    else if(operator === '/') opSymbol = '÷';
+    expressionDisplay.textContent = previousInput + ' ' + opSymbol;
+  } else expressionDisplay.textContent = '';
+}
+function inputDigit(digit){
+  if(shouldResetInput){ currentInput='0'; shouldResetInput=false; }
+  if(waitingForOperand){ currentInput=digit; waitingForOperand=false; }
+  else {
+    if(digit === '.' && currentInput.includes('.')) return;
+    if(currentInput === '0' && digit !== '.') currentInput = digit;
+    else currentInput += digit;
+  }
+  updateDisplay();
+}
+function inputOperator(op){
+  const current = parseFloat(currentInput);
+  if(operator && !waitingForOperand){
+    const result = compute(parseFloat(previousInput), current, operator);
+    currentInput = String(result);
+    previousInput = currentInput;
+  } else previousInput = currentInput;
+  operator = op; waitingForOperand = true; shouldResetInput = false;
+  updateDisplay();
+}
+function compute(a, b, op){
+  switch(op){
+    case '+': return a+b;
+    case '-': return a-b;
+    case '*': return a*b;
+    case '/': return b !== 0 ? a/b : 'Error';
+    case '%': return a%b;
+    default: return b;
+  }
+}
+function equals(){
+  const current = parseFloat(currentInput);
+  if(operator && !waitingForOperand){
+    const result = compute(parseFloat(previousInput), current, operator);
+    let opSymbol = operator;
+    if(operator === '*') opSymbol = '×';
+    else if(operator === '/') opSymbol = '÷';
+    expressionDisplay.textContent = previousInput + ' ' + opSymbol + ' ' + currentInput + ' =';
+    currentInput = String(result);
+    operator = null; previousInput = ''; waitingForOperand = false; shouldResetInput = true;
+    updateDisplay();
+  }
+}
+function clearAll(){
+  currentInput = '0'; previousInput = ''; operator = null;
+  waitingForOperand = false; shouldResetInput = false;
+  expressionDisplay.textContent = '';
+  updateDisplay();
+}
+function backspace(){
+  if(currentInput.length > 1) currentInput = currentInput.slice(0,-1);
+  else currentInput = '0';
+  updateDisplay();
+}
+document.getElementById('calcGrid').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const action = btn.dataset.action, value = btn.dataset.value;
+  if(action === 'digit') inputDigit(value);
+  else if(action === 'operator') inputOperator(value);
+  else if(action === 'equals') equals();
+  else if(action === 'clear') clearAll();
+  else if(action === 'backspace') backspace();
+});
+
+/* ============ Animate on scroll ============ */
+const animateElements = document.querySelectorAll('.animate-on-scroll');
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{ if(entry.isIntersecting) entry.target.classList.add('visible'); });
+}, {threshold:.1});
+animateElements.forEach(el=>observer.observe(el));
+
+/* ============ ESC key ============ */
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Escape') return;
+  if(settingsOverlay.classList.contains('open')){ closeSettings(); return; }
+  if(sidebar.classList.contains('open')) closeSidebar();
+});
+
+/* ============ Init ============ */
+document.body.classList.add('font-' + (localStorage.getItem('optFont') || 'inter'));
+setTheme(isLight);
+loadSettings();
+applyWallpaper();
+loadPublicData();
+
+if(location.hash === '#store') setTimeout(()=>window.navigateTo('store'), 100);
+else if(location.hash === '#order') setTimeout(()=>window.navigateTo('order'), 100);
+else if(location.hash === '#faq') setTimeout(()=>window.navigateTo('faq'), 100);
+else if(location.hash === '#admin') setTimeout(()=>window.navigateTo('admin'), 100);
+
+})();
+</script>
+</body>
+</html>
